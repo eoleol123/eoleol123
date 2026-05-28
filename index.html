@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Eol's Portfolio - Premium Cinematic Creator</title>
+  
+  <!-- SEO Optimization -->
+  <meta name="description" content="영상 제작자 Eol의 감각적이고 압도적인 비주얼의 시네마틱 비디오 포트폴리오 웹사이트입니다. 광고, 단편 영화, 뮤직비디오 등 다양한 작업물을 확인해 보세요.">
+  <meta name="keywords" content="Eol, 포트폴리오, 영상 제작, 비디오 크리에이터, 시네마틱, 광고 제작, 뮤직비디오, 단편영화, Portfolio, Filmmaker, Videographer">
+  <meta name="author" content="Eol">
+  
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://github.com/eoleol123/eoleol123">
+  <meta property="og:title" content="Eol's Portfolio - Premium Cinematic Creator">
+  <meta property="og:description" content="카메라의 렌즈를 통해 담아내는 특별한 이야기. Eol의 영상 포트폴리오 사이트입니다.">
+  <meta property="og:image" content="https://images.pexels.com/photos/1117132/pexels-photo-1117132.jpeg?auto=compress&cs=tinysrgb&w=1200">
+  
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="index.css">
+</head>
+<body>
+
+  <!-- ==========================================================================
+       1. GLASSMORPHIC HEADER & NAVIGATION
+       ========================================================================== -->
+  <header id="main-header">
+    <div class="header-container">
+      <div class="logo">
+        <a href="#">Eol<span>'s Portfolio</span></a>
+      </div>
+      <nav class="filters" aria-label="Video Categories">
+        <button class="filter-btn active" data-filter="all">All</button>
+        <button class="filter-btn" data-filter="commercial">Commercial</button>
+        <button class="filter-btn" data-filter="film">Short Film</button>
+        <button class="filter-btn" data-filter="mv">Music Video</button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- ==========================================================================
+       2. HERO SECTION (CINEMATIC HEADER VIDEO)
+       ========================================================================== -->
+  <section class="hero" id="home">
+    <video class="hero-video-bg" autoplay loop muted playsinline poster="https://images.pexels.com/photos/1117132/pexels-photo-1117132.jpeg?auto=compress&cs=tinysrgb&w=1200">
+      <source src="https://player.vimeo.com/external/371433846.sd.mp4?s=236da2f3c0227e3dc26a48d21c35a8286915cc33&profile_id=139&oauth2_token_id=57447761" type="video/mp4">
+    </video>
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+      <span class="hero-tag">Cinematic Director & Editor</span>
+      <h1 class="hero-title">Lens through<br>which stories live.</h1>
+      <p class="hero-desc">평범한 일상 속 숨겨진 찰나의 아름다움을 시네마틱한 카메라 웍과 완벽한 컬러 그레이딩으로 포착합니다. Eol의 렌즈를 통해 살아 움직이는 감각적인 영상 컬렉션을 만나보세요.</p>
+      <button class="hero-btn" id="explore-btn">
+        <span>Explore Works</span>
+        <svg viewBox="0 0 24 24">
+          <path d="M8 5v14l11-7z"/>
+        </svg>
+      </button>
+    </div>
+  </section>
+
+  <!-- ==========================================================================
+       3. PORTFOLIO GALLERY GRID
+       ========================================================================== -->
+  <main class="portfolio-section" id="works">
+    <div class="section-header">
+      <div>
+        <span class="section-subtitle">Selected Projects</span>
+        <h2 class="section-title">Showcase</h2>
+      </div>
+    </div>
+
+    <div class="gallery-grid" id="gallery">
+      
+      <!-- Video 1 (Commercial) -->
+      <article class="video-card" data-category="commercial" data-video-url="https://player.vimeo.com/external/435674703.sd.mp4?s=7fdf5f2e2ec83c07f465d648fa28db72c842fb2f&profile_id=165&oauth2_token_id=57447761">
+        <div class="card-thumb-container">
+          <span class="card-category-badge">Commercial</span>
+          <img class="card-img" src="https://images.pexels.com/photos/3400608/pexels-photo-3400608.jpeg?auto=compress&cs=tinysrgb&w=800" alt="Nike Speed Commercial Thumbnail">
+          <div class="card-overlay"></div>
+          <div class="play-btn-circle" aria-label="Play Nike Speed Commercial">
+            <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          </div>
+        </div>
+        <div class="card-details">
+          <div class="card-meta">
+            <span>Client: Active Fitness</span>
+            <span>2026</span>
+          </div>
+          <h3 class="card-title">Nike - Unleash Speed</h3>
+          <p class="card-desc">움직임의 한계를 극복하는 다이내믹한 연출과 빠른 비트의 컷 편집을 극대화한 스포츠 브랜드 광고 콘텐츠입니다.</p>
+        </div>
+      </article>
+
+      <!-- Video 2 (Music Video) -->
+      <article class="video-card" data-category="mv" data-video-url="https://player.vimeo.com/external/517602126.sd.mp4?s=d00e844fa6a6f698d249f7d07996c56f8f5370d6&profile_id=165&oauth2_token_id=57447761">
+        <div class="card-thumb-container">
+          <span class="card-category-badge">Music Video</span>
+          <img class="card-img" src="https://images.pexels.com/photos/164853/pexels-photo-164853.jpeg?auto=compress&cs=tinysrgb&w=800" alt="Midnight Neon Music Video Thumbnail">
+          <div class="card-overlay"></div>
+          <div class="play-btn-circle" aria-label="Play Midnight Neon Music Video">
+            <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          </div>
+        </div>
+        <div class="card-details">
+          <div class="card-meta">
+            <span>Artist: LUNA</span>
+            <span>2026</span>
+          </div>
+          <h3 class="card-title">Midnight Neon</h3>
+          <p class="card-desc">네온 불빛이 번지는 서울의 밤거리를 배경으로 몽환적인 신스웨이브 음악과 빈티지한 아날로그 그레인을 결합한 뮤직비디오입니다.</p>
+        </div>
+      </article>
+
+      <!-- Video 3 (Commercial) -->
+      <article class="video-card" data-category="commercial" data-video-url="https://player.vimeo.com/external/538902518.sd.mp4?s=79fa69e06180556b6df1f568f6db9bfec72a728b&profile_id=165&oauth2_token_id=57447761">
+        <div class="card-thumb-container">
+          <span class="card-category-badge">Commercial</span>
+          <img class="card-img" src="https://images.pexels.com/photos/2513007/pexels-photo-2513007.jpeg?auto=compress&cs=tinysrgb&w=800" alt="Creative Studio Promo Thumbnail">
+          <div class="card-overlay"></div>
+          <div class="play-btn-circle" aria-label="Play Creative Studio Promo">
+            <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          </div>
+        </div>
+        <div class="card-details">
+          <div class="card-meta">
+            <span>Client: Design Lab</span>
+            <span>2025</span>
+          </div>
+          <h3 class="card-title">Mindscape: Creator Space</h3>
+          <p class="card-desc">창작자의 정교한 작업 방식과 몰입감을 담아내기 위해 접사 렌즈와 깊은 피사계 심도를 활용한 디자인 에이전시 홍보 비디오입니다.</p>
+        </div>
+      </article>
+
+      <!-- Video 4 (Short Film) -->
+      <article class="video-card" data-category="film" data-video-url="https://player.vimeo.com/external/392270535.sd.mp4?s=bf7b27be30357d6d5ebbf117d3d0f04c62c9381c&profile_id=165&oauth2_token_id=57447761">
+        <div class="card-thumb-container">
+          <span class="card-category-badge">Short Film</span>
+          <img class="card-img" src="https://images.pexels.com/photos/2894205/pexels-photo-2894205.jpeg?auto=compress&cs=tinysrgb&w=800" alt="Lost In Light Short Film Thumbnail">
+          <div class="card-overlay"></div>
+          <div class="play-btn-circle" aria-label="Play Lost In Light Short Film">
+            <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          </div>
+        </div>
+        <div class="card-details">
+          <div class="card-meta">
+            <span>Genre: Cinematic Drama</span>
+            <span>2025</span>
+          </div>
+          <h3 class="card-title">Lost In Light</h3>
+          <p class="card-desc">안개 낀 울창한 숲속과 어두운 자연광 아래 차분하고 정적인 카메라 트래킹 기법을 통해 고독을 탐구하는 스틸 아트형 단편 영화입니다.</p>
+        </div>
+      </article>
+
+      <!-- Video 5 (Short Film) -->
+      <article class="video-card" data-category="film" data-video-url="https://player.vimeo.com/external/454378125.sd.mp4?s=9108b5e90af66ff4d309066601463e26cb3b9f6d&profile_id=165&oauth2_token_id=57447761">
+        <div class="card-thumb-container">
+          <span class="card-category-badge">Short Film</span>
+          <img class="card-img" src="https://images.pexels.com/photos/1047540/pexels-photo-1047540.jpeg?auto=compress&cs=tinysrgb&w=800" alt="The Canvas Artist Thumbnail">
+          <div class="card-overlay"></div>
+          <div class="play-btn-circle" aria-label="Play The Canvas Artist">
+            <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          </div>
+        </div>
+        <div class="card-details">
+          <div class="card-meta">
+            <span>Genre: Art Documentary</span>
+            <span>2025</span>
+          </div>
+          <h3 class="card-title">The Canvas: Quiet Mind</h3>
+          <p class="card-desc">화가들의 고독한 드로잉 세션과 물감이 튀는 찰나의 액션을 하이 프레임 슬로우 모션으로 정밀 분석한 시각 다큐멘터리 필름입니다.</p>
+        </div>
+      </article>
+
+      <!-- Video 6 (Music Video) -->
+      <article class="video-card" data-category="mv" data-video-url="https://player.vimeo.com/external/485641774.sd.mp4?s=120959b85c13e5b32ecdf2b941541c49615a1a1f&profile_id=165&oauth2_token_id=57447761">
+        <div class="card-thumb-container">
+          <span class="card-category-badge">Music Video</span>
+          <img class="card-img" src="https://images.pexels.com/photos/2007647/pexels-photo-2007647.jpeg?auto=compress&cs=tinysrgb&w=800" alt="Retro Wave Cyberpunk Thumbnail">
+          <div class="card-overlay"></div>
+          <div class="play-btn-circle" aria-label="Play Retro Wave Cyberpunk">
+            <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          </div>
+        </div>
+        <div class="card-details">
+          <div class="card-meta">
+            <span>Artist: Neo Tokyo</span>
+            <span>2024</span>
+          </div>
+          <h3 class="card-title">Cyberpunk Future</h3>
+          <p class="card-desc">사이버펑크의 차가운 금속성 비주얼과 미래적인 하이라이트 글리치 소스를 가미해 화려한 연출로 채워진 모던 일렉트로닉 비디오입니다.</p>
+        </div>
+      </article>
+
+      <!-- Video 7 (Commercial) -->
+      <article class="video-card" data-category="commercial" data-video-url="https://player.vimeo.com/external/554892465.sd.mp4?s=b6c7f8c0576e05d045d625bc2f1c8413998fcf70&profile_id=165&oauth2_token_id=57447761">
+        <div class="card-thumb-container">
+          <span class="card-category-badge">Commercial</span>
+          <img class="card-img" src="https://images.pexels.com/photos/3757376/pexels-photo-3757376.jpeg?auto=compress&cs=tinysrgb&w=800" alt="Athleta Brand Ad Thumbnail">
+          <div class="card-overlay"></div>
+          <div class="play-btn-circle" aria-label="Play Athleta Brand Ad">
+            <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          </div>
+        </div>
+        <div class="card-details">
+          <div class="card-meta">
+            <span>Client: Athleta wear</span>
+            <span>2024</span>
+          </div>
+          <h3 class="card-title">Pulse: Rise and Run</h3>
+          <p class="card-desc">이른 아침의 상쾌하고 눈부신 렌즈 플레어 연출과 감성적 러닝의 긴박감을 오롯이 조명한 미니멀리즘 웰니스 브랜드 광고입니다.</p>
+        </div>
+      </article>
+
+      <!-- Video 8 (Music Video) -->
+      <article class="video-card" data-category="mv" data-video-url="https://player.vimeo.com/external/409418659.sd.mp4?s=c83db2839bfa4b1b36b5ec6b077a28e815b3c3b5&profile_id=165&oauth2_token_id=57447761">
+        <div class="card-thumb-container">
+          <span class="card-category-badge">Music Video</span>
+          <img class="card-img" src="https://images.pexels.com/photos/1105666/pexels-photo-1105666.jpeg?auto=compress&cs=tinysrgb&w=800" alt="Vocalist Live Session Thumbnail">
+          <div class="card-overlay"></div>
+          <div class="play-btn-circle" aria-label="Play Vocalist Live Session">
+            <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          </div>
+        </div>
+        <div class="card-details">
+          <div class="card-meta">
+            <span>Artist: SARA</span>
+            <span>2024</span>
+          </div>
+          <h3 class="card-title">Golden Hour Acoustic</h3>
+          <p class="card-desc">석양이 쏟아지는 루프탑 야외 공연을 모노드라마처럼 아름답고 부드러운 원테이크 무빙으로 담아낸 아쿠스틱 싱어송라이터 뮤직비디오입니다.</p>
+        </div>
+      </article>
+
+    </div>
+  </main>
+
+  <!-- ==========================================================================
+       4. PREMIUM CINEMATIC LIGHTBOX MODAL (VIDEO PLAYER)
+       ========================================================================== -->
+  <div class="lightbox" id="video-lightbox" role="dialog" aria-modal="true" aria-labelledby="modal-video-title">
+    
+    <!-- Lightbox Controls -->
+    <div class="lightbox-controls">
+      <!-- Theater/Zoom Button -->
+      <button class="control-btn" id="theater-mode-btn" title="극장 모드 (화면 확대)">
+        <svg viewBox="0 0 24 24" id="theater-expand-icon">
+          <!-- Theater Expand SVG Path -->
+          <path d="M4 4h16v16H4V4zm2 2v12h12V6H6z"/>
+        </svg>
+        <svg viewBox="0 0 24 24" id="theater-shrink-icon" style="display: none;">
+          <!-- Theater Shrink SVG Path -->
+          <path d="M4 19h16v-2H4v2zm2-4h12v-2H6v2zM4 9h16V7H4v2zm2-4h12V3H6v2z"/>
+        </svg>
+      </button>
+
+      <!-- System Fullscreen Button -->
+      <button class="control-btn" id="fullscreen-btn" title="전체화면 (Fullscreen)">
+        <svg viewBox="0 0 24 24">
+          <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
+        </svg>
+      </button>
+
+      <!-- Close Button -->
+      <button class="control-btn" id="close-lightbox-btn" title="닫기 (ESC)">
+        <svg viewBox="0 0 24 24">
+          <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="lightbox-content" id="lightbox-card">
+      <div class="lightbox-media">
+        <!-- Inside this container, video element will be dynamically injected by JS -->
+        <div id="player-container"></div>
+      </div>
+      
+      <!-- Video Information Section -->
+      <div class="lightbox-info">
+        <div class="lightbox-meta" id="modal-video-meta">
+          <span>Client: NIKE</span>
+          <span>•</span>
+          <span>Category: Commercial</span>
+        </div>
+        <h3 class="lightbox-title" id="modal-video-title">Project Title</h3>
+        <p class="lightbox-desc" id="modal-video-desc">Detailed descriptions of the cinematic videography project.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+       5. FOOTER
+       ========================================================================== -->
+  <footer>
+    <div class="footer-container">
+      <div class="footer-logo">
+        Eol<span>'s Portfolio</span>
+      </div>
+      <div class="footer-links">
+        <a href="#home" class="footer-link">Home</a>
+        <a href="#works" class="footer-link">Works</a>
+        <a href="mailto:cheomjigim8@gmail.com" class="footer-link">Contact</a>
+      </div>
+      <p class="footer-copyright">
+        &copy; 2026 Eol. All rights reserved. Created & Powered by Antigravity AI.
+      </p>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="index.js"></script>
+</body>
+</html>
