@@ -64,6 +64,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const filterValue = button.getAttribute('data-filter');
 
+      // Toggling detailed-view layout based on active filter
+      if (filterValue === 'all') {
+        gallery.classList.remove('detailed-view');
+      } else {
+        gallery.classList.add('detailed-view');
+      }
+
       // Filter logic with staggered pop animation
       let revealIndex = 0;
 

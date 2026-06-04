@@ -1090,3 +1090,60 @@ footer {
   font-size: 0.8rem;
   margin-top: 10px;
 }
+
+/* ==========================================================================
+   Detailed View (Dynamic Category Layout)
+   ========================================================================== */
+.gallery-grid.detailed-view {
+  grid-template-columns: 1fr; /* Single column large showcase */
+  gap: 50px;
+}
+
+.gallery-grid.detailed-view .video-card {
+  flex-direction: row; /* Side-by-side layout */
+  min-height: 380px;
+  align-items: stretch;
+}
+
+.gallery-grid.detailed-view .card-thumb-container {
+  width: 55%;
+  padding-top: 0; /* Override aspect ratio box */
+  min-height: 100%;
+}
+
+.gallery-grid.detailed-view .card-details {
+  width: 45%;
+  padding: 40px;
+  justify-content: center;
+  gap: 15px;
+}
+
+.gallery-grid.detailed-view .card-title {
+  font-size: 1.6rem;
+  white-space: normal;
+  line-height: 1.3;
+}
+
+.gallery-grid.detailed-view .card-desc {
+  font-size: 1.05rem;
+  line-height: 1.7;
+  -webkit-line-clamp: unset; /* Remove clamp to show all text */
+  margin-top: 5px;
+}
+
+@media (max-width: 992px) {
+  .gallery-grid.detailed-view .video-card {
+    flex-direction: column; /* Stack vertically on tablet/mobile */
+  }
+  
+  .gallery-grid.detailed-view .card-thumb-container {
+    width: 100%;
+    padding-top: 56.25%;
+    min-height: auto;
+  }
+  
+  .gallery-grid.detailed-view .card-details {
+    width: 100%;
+    padding: 30px;
+  }
+}
