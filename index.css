@@ -15,8 +15,8 @@
   --bg-card-hover: #1c1c1c;
   --border-color: rgba(255, 255, 255, 0.08);
   
-  --color-primary: #ff4925;
-  --color-primary-glow: rgba(255, 73, 37, 0.4);
+  --color-primary: #ffcc00; /* Gold-Yellow Accent */
+  --color-primary-glow: rgba(255, 204, 0, 0.25);
   --color-text-white: #ffffff;
   --color-text-gray: #a0a0a0;
   --color-text-dark: #121212;
@@ -111,10 +111,83 @@ header.scrolled {
   color: var(--color-primary);
 }
 
+/* Main Navigation */
+.main-nav {
+  display: flex;
+  gap: 30px;
+  align-items: center;
+}
+
+@media (max-width: 768px) {
+  .main-nav {
+    gap: 15px;
+    margin: 10px 0;
+  }
+}
+
+.nav-link {
+  color: var(--color-text-gray);
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  transition: var(--transition-fast);
+  position: relative;
+  padding: 5px 0;
+}
+
+.nav-link:hover {
+  color: var(--color-primary);
+}
+
+.nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background-color: var(--color-primary);
+  transition: var(--transition-fast);
+}
+
+.nav-link:hover::after {
+  width: 100%;
+}
+
+/* Header Social (Instagram Button) */
+.header-social {
+  display: flex;
+  align-items: center;
+}
+
+.social-btn {
+  color: var(--color-text-gray);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-color);
+  transition: var(--transition-smooth);
+}
+
+.social-btn:hover {
+  color: var(--color-primary);
+  background: rgba(255, 204, 0, 0.1);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 15px var(--color-primary-glow);
+  transform: translateY(-2px);
+}
+
 /* Category Filters */
 .filters {
   display: flex;
   gap: 10px;
+  flex-wrap: wrap;
 }
 
 .filter-btn {
@@ -673,6 +746,294 @@ header.scrolled {
   color: var(--color-text-gray);
   font-size: 0.95rem;
   line-height: 1.6;
+}
+
+/* ==========================================================================
+   About Me Section
+   ========================================================================== */
+.about-section {
+  padding: 100px 40px;
+  max-width: 1400px;
+  margin: 0 auto;
+  scroll-margin-top: 80px; /* Offset for fixed header scroll */
+}
+
+@media (max-width: 768px) {
+  .about-section {
+    padding: 60px 20px;
+  }
+}
+
+.about-container {
+  display: flex;
+  gap: 80px;
+  align-items: center;
+}
+
+@media (max-width: 992px) {
+  .about-container {
+    flex-direction: column;
+    gap: 40px;
+    text-align: center;
+  }
+}
+
+.about-image-wrapper {
+  position: relative;
+  flex-shrink: 0;
+  width: 320px;
+  height: 320px;
+  border-radius: 50%;
+  padding: 8px;
+  background: linear-gradient(135deg, var(--color-primary) 0%, rgba(255,255,255,0.05) 100%);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+}
+
+@media (max-width: 480px) {
+  .about-image-wrapper {
+    width: 250px;
+    height: 250px;
+  }
+}
+
+.about-profile-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 4px solid var(--bg-dark);
+  background-color: #121212;
+  position: relative;
+  z-index: 2;
+}
+
+.about-image-glow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: var(--color-primary);
+  filter: blur(35px);
+  opacity: 0.15;
+  z-index: 1;
+  pointer-events: none;
+  animation: pulseGlow 4s infinite alternate;
+}
+
+@keyframes pulseGlow {
+  0% { transform: scale(0.95); opacity: 0.12; }
+  100% { transform: scale(1.05); opacity: 0.22; }
+}
+
+.about-content {
+  flex-grow: 1;
+}
+
+.about-subtitle {
+  color: var(--color-primary);
+  font-size: 0.9rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  display: block;
+  margin-bottom: 10px;
+}
+
+.about-title {
+  font-family: var(--font-title);
+  font-size: 2.2rem;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  margin-bottom: 25px;
+  line-height: 1.3;
+}
+
+@media (max-width: 768px) {
+  .about-title {
+    font-size: 1.8rem;
+  }
+}
+
+.about-text {
+  color: var(--color-text-gray);
+  font-size: 1.05rem;
+  font-weight: 300;
+  line-height: 1.7;
+  margin-bottom: 20px;
+}
+
+.about-text strong {
+  color: var(--color-text-white);
+  font-weight: 600;
+}
+
+.about-meta-links {
+  margin-top: 30px;
+}
+
+@media (max-width: 992px) {
+  .about-meta-links {
+    display: flex;
+    justify-content: center;
+  }
+}
+
+.about-link-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255, 204, 0, 0.08);
+  border: 1px solid var(--color-primary);
+  color: var(--color-primary);
+  padding: 12px 28px;
+  border-radius: 30px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  text-decoration: none;
+  transition: var(--transition-smooth);
+}
+
+.about-link-btn:hover {
+  background: var(--color-primary);
+  color: var(--color-text-dark);
+  box-shadow: 0 5px 20px var(--color-primary-glow);
+  transform: translateY(-2px);
+}
+
+/* ==========================================================================
+   My Skills Section
+   ========================================================================== */
+.skills-section {
+  padding: 100px 40px;
+  background: rgba(255, 255, 255, 0.01);
+  border-top: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color);
+  scroll-margin-top: 80px;
+}
+
+@media (max-width: 768px) {
+  .skills-section {
+    padding: 60px 20px;
+  }
+}
+
+.skills-container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.skills-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 30px;
+  margin-top: 50px;
+}
+
+@media (max-width: 480px) {
+  .skills-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.skill-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  transition: var(--transition-smooth);
+  height: 100%;
+}
+
+.skill-card-inner {
+  padding: 35px 30px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.skill-card:hover {
+  transform: translateY(-8px);
+  border-color: var(--color-primary);
+  box-shadow: 0 15px 35px rgba(255, 204, 0, 0.08);
+}
+
+.skill-icon-wrap {
+  width: 60px;
+  height: 60px;
+  margin-bottom: 25px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  padding: 10px;
+  overflow: hidden;
+  transition: var(--transition-smooth);
+}
+
+.skill-card:hover .skill-icon-wrap {
+  border-color: var(--color-primary);
+  background: rgba(255, 204, 0, 0.05);
+}
+
+.skill-logo {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  transition: var(--transition-smooth);
+}
+
+/* Multi logos inside Blender/Substance */
+.skill-icon-wrap.multi-logos {
+  gap: 8px;
+  padding: 8px;
+}
+
+.skill-icon-wrap.multi-logos .skill-logo {
+  max-width: 45%;
+  max-height: 100%;
+}
+
+.skill-card-title {
+  font-family: var(--font-title);
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--color-text-white);
+  margin-bottom: 6px;
+  letter-spacing: -0.2px;
+}
+
+.skill-card:hover .skill-card-title {
+  color: var(--color-primary);
+}
+
+.skill-card-subtitle {
+  color: var(--color-primary);
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 15px;
+  display: block;
+}
+
+.skill-card-desc {
+  color: var(--color-text-gray);
+  font-size: 0.92rem;
+  line-height: 1.6;
+  font-weight: 300;
+}
+
+.center-align {
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  border: none;
+  padding-left: 0;
 }
 
 /* ==========================================================================
