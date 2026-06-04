@@ -33,9 +33,11 @@
       </div>
       <nav class="filters" aria-label="Video Categories">
         <button class="filter-btn active" data-filter="all">All</button>
-        <button class="filter-btn" data-filter="commercial">Commercial</button>
-        <button class="filter-btn" data-filter="film">Short Film</button>
-        <button class="filter-btn" data-filter="mv">Music Video</button>
+        <button class="filter-btn" data-filter="virtual-production">Virtual Production</button>
+        <button class="filter-btn" data-filter="vr-dev">VR Dev</button>
+        <button class="filter-btn" data-filter="ai">AI</button>
+        <button class="filter-btn" data-filter="3d-animation">3D Animation</button>
+        <button class="filter-btn" data-filter="arduino">Arduino</button>
       </nav>
     </div>
   </header>
@@ -49,7 +51,7 @@
     </video>
     <div class="hero-overlay"></div>
     <div class="hero-content">
-      <span class="hero-tag">Cinematic Director & Editor</span>
+      <span class="hero-tag">Cinematic Director & Developer</span>
       <h1 class="hero-title">Lens through<br>which stories live.</h1>
       <p class="hero-desc">평범한 일상 속 숨겨진 찰나의 아름다움을 시네마틱한 카메라 웍과 완벽한 컬러 그레이딩으로 포착합니다. Eol의 렌즈를 통해 살아 움직이는 감각적인 영상 컬렉션을 만나보세요.</p>
       <button class="hero-btn" id="explore-btn">
@@ -74,163 +76,123 @@
 
     <div class="gallery-grid" id="gallery">
       
-      <!-- Video 1 (Commercial) -->
-      <article class="video-card" data-category="commercial" data-video-url="assets/웹페이지 테스트1.mp4">
+      <!-- Video 1 (Virtual Production) -->
+      <article class="video-card" data-category="virtual-production" data-video-url="assets/웹페이지 테스트1.mp4">
         <div class="card-thumb-container">
-          <span class="card-category-badge">Commercial</span>
-          <img class="card-img" src="assets/웹페이지 테스트4.png" alt="Nike Speed Commercial Thumbnail">
+          <span class="card-category-badge">Virtual Production</span>
+          <img class="card-img" src="assets/웹페이지 테스트4.png" alt="Virtual Avatar Project Thumbnail">
           <div class="card-overlay"></div>
-          <div class="play-btn-circle" aria-label="Play Nike Speed Commercial">
+          <div class="play-btn-circle" aria-label="Play Virtual Avatar Project">
             <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
           </div>
         </div>
         <div class="card-details">
           <div class="card-meta">
-            <span>Client: Active Fitness</span>
+            <span>Project: Virtual Avatar & Character</span>
             <span>2026</span>
           </div>
-          <h3 class="card-title">Nike - Unleash Speed</h3>
-          <p class="card-desc">움직임의 한계를 극복하는 다이내믹한 연출과 빠른 비트의 컷 편집을 극대화한 스포츠 브랜드 광고 콘텐츠입니다.</p>
+          <h3 class="card-title">버추얼 아바타 콘텐츠 연출</h3>
+          <p class="card-desc">버추얼 캐릭터 및 가상 아바타 기술을 기반으로 현실감 넘치는 모션 캡처와 3D 그래픽을 융합한 버추얼 아바타 / 버추얼 아이돌 비디오 제작 프로젝트입니다.</p>
         </div>
       </article>
 
-      <!-- Video 2 (Music Video) -->
-      <article class="video-card" data-category="mv" data-video-url="assets/웹페이지 테스트2.mp4">
+      <!-- Video 2 (VR Dev - 01) -->
+      <article class="video-card" data-category="vr-dev" data-video-url="assets/VR_01.mp4">
         <div class="card-thumb-container">
-          <span class="card-category-badge">Music Video</span>
-          <img class="card-img" src="assets/웹페이지 테스트4.png" alt="Midnight Neon Music Video Thumbnail">
+          <span class="card-category-badge">VR Dev</span>
+          <img class="card-img" src="assets/웹페이지 테스트4.png" alt="VR Interaction Physics Thumbnail">
           <div class="card-overlay"></div>
-          <div class="play-btn-circle" aria-label="Play Midnight Neon Music Video">
+          <div class="play-btn-circle" aria-label="Play VR Interaction Physics">
             <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
           </div>
         </div>
         <div class="card-details">
           <div class="card-meta">
-            <span>Artist: LUNA</span>
+            <span>Platform: VR (Unity XR)</span>
             <span>2026</span>
           </div>
-          <h3 class="card-title">Midnight Neon</h3>
-          <p class="card-desc">네온 불빛이 번지는 서울의 밤거리를 배경으로 몽환적인 신스웨이브 음악과 빈티지한 아날로그 그레인을 결합한 뮤직비디오입니다.</p>
+          <h3 class="card-title">VR 물리 상호작용 시스템 개발</h3>
+          <p class="card-desc">유니티 엔진과 XR Interaction Toolkit을 사용하여 VR 가상 공간 내에서의 잡기, 던지기 및 정교한 물리 충돌 반응 시스템을 구현한 개발 사례입니다.</p>
         </div>
       </article>
 
-      <!-- Video 3 (Commercial) -->
-      <article class="video-card" data-category="commercial" data-video-url="assets/웹페이지 테스트3.mp4">
+      <!-- Video 3 (VR Dev - 02) -->
+      <article class="video-card" data-category="vr-dev" data-video-url="assets/VR_02.mp4">
         <div class="card-thumb-container">
-          <span class="card-category-badge">Commercial</span>
-          <img class="card-img" src="assets/웹페이지 테스트4.png" alt="Creative Studio Promo Thumbnail">
+          <span class="card-category-badge">VR Dev</span>
+          <img class="card-img" src="assets/웹페이지 테스트4.png" alt="VR Space Flight Simulator Thumbnail">
           <div class="card-overlay"></div>
-          <div class="play-btn-circle" aria-label="Play Creative Studio Promo">
+          <div class="play-btn-circle" aria-label="Play VR Space Flight Simulator">
             <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
           </div>
         </div>
         <div class="card-details">
           <div class="card-meta">
-            <span>Client: Design Lab</span>
+            <span>Platform: VR Simulator</span>
+            <span>2026</span>
+          </div>
+          <h3 class="card-title">VR 비행 시뮬레이터 공간 제어</h3>
+          <p class="card-desc">3차원 가상 비행 공간에서 입출력 센서 데이터 연동과 가상 조작 기기 UI를 통합하여 극대화된 몰입감을 주는 시뮬레이터 콘텐츠 개발 사례입니다.</p>
+        </div>
+      </article>
+
+      <!-- Video 4 (AI) -->
+      <article class="video-card" data-category="ai" data-video-url="assets/AI.mp4">
+        <div class="card-thumb-container">
+          <span class="card-category-badge">AI Content</span>
+          <img class="card-img" src="assets/웹페이지 테스트4.png" alt="AI Generative Video Art Thumbnail">
+          <div class="card-overlay"></div>
+          <div class="play-btn-circle" aria-label="Play AI Generative Video Art">
+            <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          </div>
+        </div>
+        <div class="card-details">
+          <div class="card-meta">
+            <span>Framework: Stable Diffusion</span>
+            <span>2026</span>
+          </div>
+          <h3 class="card-title">Generative AI 시네마틱 비디오</h3>
+          <p class="card-desc">최신 생성형 비디오 AI 엔진과 연출 프롬프트 공학을 활용하여 고품질 가상 비주얼 컷을 생성하고 일관성 있는 영상미로 직조해 낸 비디오 아트입니다.</p>
+        </div>
+      </article>
+
+      <!-- Video 5 (3D Animation) -->
+      <article class="video-card" data-category="3d-animation" data-video-url="assets/3D Anim.mp4">
+        <div class="card-thumb-container">
+          <span class="card-category-badge">3D Animation</span>
+          <img class="card-img" src="assets/웹페이지 테스트4.png" alt="3D Motion Animation Showcase Thumbnail">
+          <div class="card-overlay"></div>
+          <div class="play-btn-circle" aria-label="Play 3D Motion Animation Showcase">
+            <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          </div>
+        </div>
+        <div class="card-details">
+          <div class="card-meta">
+            <span>Tools: Blender & Maya</span>
             <span>2025</span>
           </div>
-          <h3 class="card-title">Mindscape: Creator Space</h3>
-          <p class="card-desc">창작자의 정교한 작업 방식과 몰입감을 담아내기 위해 접사 렌즈와 깊은 피사계 심도를 활용한 디자인 에이전시 홍보 비디오입니다.</p>
+          <h3 class="card-title">3D 캐릭터 시네마틱 애니메이션</h3>
+          <p class="card-desc">정교한 3D 캐릭터 모델링 및 뼈대 리깅을 기반으로 하여 역동적이고 유연한 동작 표현 및 카메라 트래킹으로 화려하게 완성한 애니메이션입니다.</p>
         </div>
       </article>
 
-      <!-- Video 4 (Short Film) -->
-      <article class="video-card" data-category="film" data-video-url="assets/웹페이지 테스트1.mp4">
+      <!-- Video 6 (Arduino) -->
+      <article class="video-card" data-category="arduino" data-video-url="assets/Arduino.mov">
         <div class="card-thumb-container">
-          <span class="card-category-badge">Short Film</span>
-          <img class="card-img" src="assets/웹페이지 테스트4.png" alt="Lost In Light Short Film Thumbnail">
+          <span class="card-category-badge">Arduino</span>
+          <img class="card-img" src="assets/웹페이지 테스트4.png" alt="Arduino Physical Gaming Console Thumbnail">
           <div class="card-overlay"></div>
-          <div class="play-btn-circle" aria-label="Play Lost In Light Short Film">
+          <div class="play-btn-circle" aria-label="Play Arduino Physical Gaming Console">
             <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
           </div>
         </div>
         <div class="card-details">
           <div class="card-meta">
-            <span>Genre: Cinematic Drama</span>
+            <span>Tech: Arduino Embedded</span>
             <span>2025</span>
           </div>
-          <h3 class="card-title">Lost In Light</h3>
-          <p class="card-desc">안개 낀 울창한 숲속과 어두운 자연광 아래 차분하고 정적인 카메라 트래킹 기법을 통해 고독을 탐구하는 스틸 아트형 단편 영화입니다.</p>
-        </div>
-      </article>
-
-      <!-- Video 5 (Short Film) -->
-      <article class="video-card" data-category="film" data-video-url="assets/웹페이지 테스트2.mp4">
-        <div class="card-thumb-container">
-          <span class="card-category-badge">Short Film</span>
-          <img class="card-img" src="assets/웹페이지 테스트4.png" alt="The Canvas Artist Thumbnail">
-          <div class="card-overlay"></div>
-          <div class="play-btn-circle" aria-label="Play The Canvas Artist">
-            <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-          </div>
-        </div>
-        <div class="card-details">
-          <div class="card-meta">
-            <span>Genre: Art Documentary</span>
-            <span>2025</span>
-          </div>
-          <h3 class="card-title">The Canvas: Quiet Mind</h3>
-          <p class="card-desc">화가들의 고독한 드로잉 세션과 물감이 튀는 찰나의 액션을 하이 프레임 슬로우 모션으로 정밀 분석한 시각 다큐멘터리 필름입니다.</p>
-        </div>
-      </article>
-
-      <!-- Video 6 (Music Video) -->
-      <article class="video-card" data-category="mv" data-video-url="assets/웹페이지 테스트3.mp4">
-        <div class="card-thumb-container">
-          <span class="card-category-badge">Music Video</span>
-          <img class="card-img" src="assets/웹페이지 테스트4.png" alt="Retro Wave Cyberpunk Thumbnail">
-          <div class="card-overlay"></div>
-          <div class="play-btn-circle" aria-label="Play Retro Wave Cyberpunk">
-            <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-          </div>
-        </div>
-        <div class="card-details">
-          <div class="card-meta">
-            <span>Artist: Neo Tokyo</span>
-            <span>2024</span>
-          </div>
-          <h3 class="card-title">Cyberpunk Future</h3>
-          <p class="card-desc">사이버펑크의 차가운 금속성 비주얼과 미래적인 하이라이트 글리치 소스를 가미해 화려한 연출로 채워진 모던 일렉트로닉 비디오입니다.</p>
-        </div>
-      </article>
-
-      <!-- Video 7 (Commercial) -->
-      <article class="video-card" data-category="commercial" data-video-url="assets/웹페이지 테스트1.mp4">
-        <div class="card-thumb-container">
-          <span class="card-category-badge">Commercial</span>
-          <img class="card-img" src="assets/웹페이지 테스트4.png" alt="Athleta Brand Ad Thumbnail">
-          <div class="card-overlay"></div>
-          <div class="play-btn-circle" aria-label="Play Athleta Brand Ad">
-            <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-          </div>
-        </div>
-        <div class="card-details">
-          <div class="card-meta">
-            <span>Client: Athleta wear</span>
-            <span>2024</span>
-          </div>
-          <h3 class="card-title">Pulse: Rise and Run</h3>
-          <p class="card-desc">이른 아침의 상쾌하고 눈부신 렌즈 플레어 연출과 감성적 러닝의 긴박감을 오롯이 조명한 미니멀리즘 웰니스 브랜드 광고입니다.</p>
-        </div>
-      </article>
-
-      <!-- Video 8 (Music Video) -->
-      <article class="video-card" data-category="mv" data-video-url="assets/웹페이지 테스트2.mp4">
-        <div class="card-thumb-container">
-          <span class="card-category-badge">Music Video</span>
-          <img class="card-img" src="assets/웹페이지 테스트4.png" alt="Vocalist Live Session Thumbnail">
-          <div class="card-overlay"></div>
-          <div class="play-btn-circle" aria-label="Play Vocalist Live Session">
-            <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-          </div>
-        </div>
-        <div class="card-details">
-          <div class="card-meta">
-            <span>Artist: SARA</span>
-            <span>2024</span>
-          </div>
-          <h3 class="card-title">Golden Hour Acoustic</h3>
-          <p class="card-desc">석양이 쏟아지는 루프탑 야외 공연을 모노드라마처럼 아름답고 부드러운 원테이크 무빙으로 담아낸 아쿠스틱 싱어송라이터 뮤직비디오입니다.</p>
+          <h3 class="card-title">아두이노 피지컬 하드웨어 게임</h3>
+          <p class="card-desc">아두이노 컨트롤러 보드 및 맞춤형 스위치 기판, LCD 디스플레이와의 직렬 통신을 통해 화면 속 인터랙션과 실시간으로 연동되는 하드웨어 콘솔입니다.</p>
         </div>
       </article>
 

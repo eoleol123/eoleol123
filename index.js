@@ -52,39 +52,41 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ==========================================================================
-  // B. Category Grid Filtering (With Premium Fade Transitions)
+  // B. Category Grid Filtering (With Premium Staggered Pop Transitions)
   // ==========================================================================
   filterButtons.forEach(button => {
     button.addEventListener('click', () => {
+      if (button.classList.contains('active')) return;
+
       // Remove active class from all buttons and add to clicked
       filterButtons.forEach(btn => btn.classList.remove('active'));
       button.classList.add('active');
 
       const filterValue = button.getAttribute('data-filter');
 
-      // Add fade-out class to gallery
-      gallery.style.opacity = '0';
-      gallery.style.transform = 'translateY(10px)';
+      // Filter logic with staggered pop animation
+      let revealIndex = 0;
 
-      setTimeout(() => {
-        videoCards.forEach(card => {
-          const category = card.getAttribute('data-category');
-          if (filterValue === 'all' || category === filterValue) {
-            card.style.display = 'flex';
-          } else {
-            card.style.display = 'none';
-          }
-        });
+      videoCards.forEach(card => {
+        const category = card.getAttribute('data-category');
+        const isMatch = filterValue === 'all' || category === filterValue;
 
-        // Trigger reflow & fade back in smoothly
-        gallery.style.opacity = '1';
-        gallery.style.transform = 'translateY(0)';
-      }, 300);
+        if (isMatch) {
+          card.classList.remove('hidden');
+          // Clear any previous animation
+          card.style.animation = 'none';
+          // Trigger reflow to restart animation
+          card.offsetHeight;
+          // Apply staggered spring animation
+          card.style.animation = `cardReveal 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both ${revealIndex * 0.08}s`;
+          revealIndex++;
+        } else {
+          card.classList.add('hidden');
+          card.style.animation = 'none';
+        }
+      });
     });
   });
-
-  // Add transition to gallery for smooth filtering animation
-  gallery.style.transition = 'opacity 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)';
 
   // ==========================================================================
   // C. Interactive Video Lightbox Player
@@ -128,10 +130,14 @@ document.addEventListener('DOMContentLoaded', () => {
           </iframe>`;
         activeVideoElement = playerContainer.querySelector('iframe');
       } else {
-        // Direct MP4 Video Tag injection (Autoplay, Mute-to-unmute control, loop enabled)
+        // Direct MP4 / MOV Video Tag injection (Autoplay, loop enabled)
+        let mimeType = 'video/mp4';
+        if (videoUrl.toLowerCase().endsWith('.mov')) {
+          mimeType = 'video/quicktime';
+        }
         playerContainer.innerHTML = `
           <video controls autoplay playsinline loop>
-            <source src="${videoUrl}" type="video/mp4">
+            <source src="${videoUrl}" type="${mimeType}">
             이 브라우저는 비디오 태그를 지원하지 않습니다.
           </video>`;
         activeVideoElement = playerContainer.querySelector('video');
@@ -139,6 +145,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Set high quality volume
         activeVideoElement.volume = 0.8;
       }
+
 
       // Activate Lightbox
       lightbox.classList.add('active');

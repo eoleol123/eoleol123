@@ -343,7 +343,8 @@ header.scrolled {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
   gap: 30px;
-  transition: var(--transition-smooth);
+  transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform, opacity;
 }
 
 @media (max-width: 992px) {
@@ -359,7 +360,7 @@ header.scrolled {
   }
 }
 
-/* Video Card styling */
+/* Video Card styling with custom transitions */
 .video-card {
   background: var(--bg-card);
   border: 1px solid var(--border-color);
@@ -367,9 +368,14 @@ header.scrolled {
   overflow: hidden;
   cursor: pointer;
   position: relative;
-  transition: var(--transition-smooth);
+  transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.4s ease,
+              box-shadow 0.4s ease;
   display: flex;
   flex-direction: column;
+  transform-origin: center bottom;
+  backface-visibility: hidden;
 }
 
 .video-card:hover {
@@ -377,6 +383,32 @@ header.scrolled {
   border-color: rgba(255, 73, 37, 0.3);
   box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
 }
+
+.video-card.hidden {
+  opacity: 0;
+  transform: scale(0.85) translateY(30px);
+  pointer-events: none;
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  border: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* Premium Staggered Filtering Keyframes */
+@keyframes cardReveal {
+  0% {
+    opacity: 0;
+    transform: scale(0.9) translateY(40px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
 
 /* Card Thumbnail Overlay */
 .card-thumb-container {
