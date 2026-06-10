@@ -1494,6 +1494,10 @@
         const s = 2 + t * 14;   // reverted to 1x dragon scale (2 -> 16)
         dragonBreath.chargeMesh.position.copy(mouthPos);
         dragonBreath.chargeMesh.scale.set(s, s, s);
+        // Pulse opacity strongly near fire
+        const pulse = 0.3 + t * 0.7;
+        dragonBreath.chargeMesh.material.opacity = pulse;
+
         // Also update halo (1.8x bigger for bloom look)
         if (dragonBreath.haloMesh) {
           const hs = s * 1.8;
@@ -1506,9 +1510,6 @@
           dragonBreath.chargeLight.position.copy(mouthPos);
           dragonBreath.chargeLight.intensity = 3 + t * 22;
         }
-        // Pulse opacity strongly near fire
-        const pulse = 0.3 + t * 0.7;
-        dragonBreath.chargeMesh.material.opacity = pulse;
         // Also pulse inner core
         if (dragonBreath.chargeCoreLight) {
           dragonBreath.chargeCoreLight.position.copy(mouthPos);
