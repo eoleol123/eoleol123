@@ -155,18 +155,22 @@ document.addEventListener('DOMContentLoaded', () => {
         // Force loading the media resources
         video.load();
         
-        // Autoplay Policy Fallback handling
-        const playPromise = video.play();
-        if (playPromise !== undefined) {
-          playPromise.catch(error => {
-            console.warn("Unmuted autoplay prevented. Retrying with muted option:", error);
-            // Fallback to muted playback which is always allowed by browsers
-            video.muted = true;
-            video.play().catch(err => {
-              console.error("Muted playback also failed:", err);
+        // Delay play trigger to avoid GPU render clashes during CSS modal transition (350ms)
+        setTimeout(() => {
+          if (activeVideoElement !== video) return; // Prevent playing if user closed the modal quickly
+          
+          const playPromise = video.play();
+          if (playPromise !== undefined) {
+            playPromise.catch(error => {
+              console.warn("Unmuted autoplay prevented. Retrying with muted option:", error);
+              // Fallback to muted playback which is always allowed by browsers
+              video.muted = true;
+              video.play().catch(err => {
+                console.error("Muted playback also failed:", err);
+              });
             });
-          });
-        }
+          }
+        }, 350);
       }
 
 
