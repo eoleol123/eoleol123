@@ -3,6 +3,232 @@
    ========================================================================== */
 
 (function() {
+  const SoundEngine = {
+    ctx: null,
+    masterGain: null,
+    bgmOsc: null,
+    bgmGain: null,
+    bgmInterval: null,
+    
+    init: function() {
+      if (this.ctx) return;
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      this.ctx = new AudioContext();
+      this.masterGain = this.ctx.createGain();
+      this.masterGain.gain.value = 0.4;
+      this.masterGain.connect(this.ctx.destination);
+    },
+
+    playNoise: function(duration, vol) {
+      if (!this.ctx) return;
+      const bufferSize = this.ctx.sampleRate * duration;
+      const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+      const noise = this.ctx.createBufferSource();
+      noise.buffer = buffer;
+      const filter = this.ctx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.value = 1000;
+      const gain = this.ctx.createGain();
+      gain.gain.setValueAtTime(vol, this.ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + duration);
+      noise.connect(filter);
+      filter.connect(gain);
+      gain.connect(this.masterGain);
+      noise.start();
+    },
+
+    playCoin: function() {
+      if (!this.ctx) return;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(987.77, this.ctx.currentTime); // B5
+      osc.frequency.setValueAtTime(1318.51, this.ctx.currentTime + 0.1); // E6
+      gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.5);
+      osc.connect(gain);
+      gain.connect(this.masterGain);
+      osc.start();
+      osc.stop(this.ctx.currentTime + 0.5);
+    },
+
+    playLaser: function() {
+      if (!this.ctx) return;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(880, this.ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(110, this.ctx.currentTime + 0.2);
+      gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.2);
+      osc.connect(gain);
+      gain.connect(this.masterGain);
+      osc.start();
+      osc.stop(this.ctx.currentTime + 0.2);
+    },
+    
+    playPlayerLaser: function() {
+      if (!this.ctx) return;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(1200, this.ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(200, this.ctx.currentTime + 0.1);
+      gain.gain.setValueAtTime(0.03, this.ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.1);
+      osc.connect(gain);
+      gain.connect(this.masterGain);
+      osc.start();
+      osc.stop(this.ctx.currentTime + 0.1);
+    },
+
+    playHit: function() {
+      this.playNoise(0.2, 0.2);
+    },
+
+    playExplosion: function() {
+      if (!this.ctx) return;
+      const duration = 1.5;
+      const bufferSize = this.ctx.sampleRate * duration;
+      const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+      const noise = this.ctx.createBufferSource();
+      noise.buffer = buffer;
+      const filter = this.ctx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(800, this.ctx.currentTime);
+      filter.frequency.exponentialRampToValueAtTime(50, this.ctx.currentTime + duration);
+      const gain = this.ctx.createGain();
+      gain.gain.setValueAtTime(0.6, this.ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + duration);
+      noise.connect(filter);
+      filter.connect(gain);
+      gain.connect(this.masterGain);
+      noise.start();
+    },
+
+    playWarning: function() {
+      if (!this.ctx) return;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(600, this.ctx.currentTime);
+      osc.frequency.setValueAtTime(800, this.ctx.currentTime + 0.2);
+      gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+      gain.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.4);
+      osc.connect(gain);
+      gain.connect(this.masterGain);
+      osc.start();
+      osc.stop(this.ctx.currentTime + 0.4);
+    },
+
+    playBlackhole: function() {
+      if (!this.ctx) return;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      const lfo = this.ctx.createOscillator();
+      osc.type = 'sine';
+      osc.frequency.value = 60;
+      lfo.type = 'sine';
+      lfo.frequency.value = 5;
+      const lfoGain = this.ctx.createGain();
+      lfoGain.gain.value = 0.5;
+      lfo.connect(lfoGain);
+      lfoGain.connect(gain.gain);
+      
+      gain.gain.setValueAtTime(0.5, this.ctx.currentTime);
+      gain.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 2.0);
+      
+      osc.connect(gain);
+      gain.connect(this.masterGain);
+      osc.start();
+      lfo.start();
+      osc.stop(this.ctx.currentTime + 2.0);
+      lfo.stop(this.ctx.currentTime + 2.0);
+    },
+
+    playBreathCharge: function() {
+      if (!this.ctx) return;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(100, this.ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(800, this.ctx.currentTime + 1.5);
+      gain.gain.setValueAtTime(0, this.ctx.currentTime);
+      gain.gain.linearRampToValueAtTime(0.3, this.ctx.currentTime + 1.5);
+      osc.connect(gain);
+      gain.connect(this.masterGain);
+      osc.start();
+      osc.stop(this.ctx.currentTime + 1.5);
+    },
+
+    playBreathFire: function() {
+      this.playNoise(2.0, 0.8);
+    },
+
+    startBGM: function(isCombat) {
+      this.stopBGM();
+      if (!this.ctx) return;
+      this.bgmGain = this.ctx.createGain();
+      this.bgmGain.gain.value = 0.1;
+      this.bgmGain.connect(this.masterGain);
+
+      if (isCombat) {
+        const notes = [220, 220, 261.63, 220, 329.63, 220, 293.66, 261.63];
+        let noteIdx = 0;
+        this.bgmInterval = setInterval(() => {
+          if (!this.ctx) return;
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'sawtooth';
+          osc.frequency.value = notes[noteIdx] / 2;
+          gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.15);
+          osc.connect(gain);
+          gain.connect(this.bgmGain);
+          osc.start();
+          osc.stop(this.ctx.currentTime + 0.15);
+          noteIdx = (noteIdx + 1) % notes.length;
+        }, 150);
+      } else {
+        this.bgmOsc = this.ctx.createOscillator();
+        this.bgmOsc.type = 'sine';
+        this.bgmOsc.frequency.value = 110;
+        
+        const lfo = this.ctx.createOscillator();
+        lfo.type = 'sine';
+        lfo.frequency.value = 0.1;
+        const lfoGain = this.ctx.createGain();
+        lfoGain.gain.value = 10;
+        lfo.connect(lfoGain);
+        lfoGain.connect(this.bgmOsc.frequency);
+
+        this.bgmOsc.connect(this.bgmGain);
+        this.bgmOsc.start();
+        lfo.start();
+      }
+    },
+
+    stopBGM: function() {
+      if (this.bgmInterval) {
+        clearInterval(this.bgmInterval);
+        this.bgmInterval = null;
+      }
+      if (this.bgmOsc) {
+        this.bgmOsc.stop();
+        this.bgmOsc.disconnect();
+        this.bgmOsc = null;
+      }
+      if (this.bgmGain) {
+        this.bgmGain.disconnect();
+        this.bgmGain = null;
+      }
+    }
+  };
+
   let scene, camera, renderer, clock;
   let player = null; // This will hold our spaceship Group
   let controls = null;
@@ -230,6 +456,9 @@
     animate();
 
     window.addEventListener('resize', onWindowResize);
+
+    SoundEngine.init();
+    SoundEngine.startBGM(false);
   }
 
   function createStarfield() {
@@ -619,6 +848,7 @@
   function takeDamage(amount) {
     if (isGameOver || isMissionClear) return;
     
+    SoundEngine.playHit();
     playerHP -= amount;
     if (playerHP < 0) playerHP = 0;
 
@@ -646,6 +876,7 @@
   }
 
   function triggerGameOver() {
+    SoundEngine.stopBGM();
     isGameOver = true;
     currentSpeed = 0;
     const overScreen = document.getElementById('game-over-screen');
@@ -653,6 +884,7 @@
   }
 
   function triggerMissionClear() {
+    SoundEngine.stopBGM();
     isMissionClear = true;
     currentSpeed = 0;
     const clearScreen = document.getElementById('game-clear-screen');
@@ -791,6 +1023,7 @@
   }
 
   function passRing(ring) {
+    SoundEngine.playCoin();
     ring.passed = true;
     ring.material.color.setHex(0x00ff66);
     ring.material.emissive.setHex(0x00ff66);
@@ -840,6 +1073,7 @@
       if (gameStage !== 5) {
         gameStage = 5;
         combatMode = true;
+        SoundEngine.startBGM(true);
         showWarningBanner("COMBAT MODE ENGAGED: DESTROY THE DRAGON!");
         if (stageName) stageName.innerText = "FINAL STAGE: COMBAT MODE";
         initCombatMode();
@@ -873,6 +1107,7 @@
 
       const dist = m.position.distanceTo(player.position);
       if (dist < m.userData.radius + 1.8) {
+        SoundEngine.playExplosion();
         takeDamage(5);
         spawnExplosion(m.position, 0xffaa00, 15, 0.4);
         scene.remove(m);
@@ -1049,6 +1284,7 @@
 
       if (ps.fireTimer >= 2.5) {
         ps.fireTimer = 0;
+        SoundEngine.playLaser();
 
         // Fire laser bolt
         const laserGeo = new THREE.CylinderGeometry(0.5, 0.5, 18, 8);
@@ -1592,13 +1828,15 @@
     // Autonomous combat movement
     if (combatMode && dragon && gameStage === 5) {
       const time = clock.getElapsedTime();
-      const radius = 250; // Closer combat distance
-      const heightOffset = Math.sin(time * 1.5) * 60; // Faster vertical bob
-      const targetZ = player.position.z - radius;
+      const radius = 350; // Arc radius
+      const heightOffset = Math.sin(time * 1.5) * 60; // Vertical bobbing
       
-      // Aggressive side-to-side strafing
-      const strafeMax = 180;
-      const targetX = Math.sin(time * 0.8) * strafeMax;
+      // Arc orbit logic (sweeping semi-circle in front of player)
+      const orbitSpeed = 0.5;
+      const angle = Math.sin(time * orbitSpeed) * (Math.PI / 2.2); // Swing left and right
+
+      const targetX = Math.sin(angle) * radius;
+      const targetZ = player.position.z - Math.cos(angle) * radius;
       
       const targetPos = new THREE.Vector3(targetX, player.position.y + 30 + heightOffset, targetZ);
       dragon.position.lerp(targetPos, 2.0 * deltaTime);
@@ -1651,6 +1889,7 @@
 
         // Charge complete → transition to fire
         if (dragonBreath.chargeTimer <= 0) {
+          SoundEngine.playBreathFire();
           scene.remove(dragonBreath.chargeMesh);
           dragonBreath.chargeMesh.geometry.dispose();
           dragonBreath.chargeMesh.material.dispose();
@@ -1785,6 +2024,7 @@
     if (patternId === 1) {
       // START BREATH CHARGE SEQUENCE (skip if already charging/firing)
       if (dragonBreath) return;
+      SoundEngine.playBreathCharge();
 
       // Glowing energy sphere at mouth (will grow during charge)
       const chargeGeo = new THREE.SphereGeometry(1, 14, 10);
@@ -1842,6 +2082,7 @@
     } else if (patternId === 2) {
       // Orbital warning bombardment
       if (bombardmentActive) return;
+      SoundEngine.playWarning();
       const center = player.position.clone();
       const warningGeo = new THREE.SphereGeometry(12, 16, 16);
       const warningMat = new THREE.MeshBasicMaterial({ color: 0xff3b30, wireframe: true, transparent: true, opacity: 0.35 });
@@ -1854,6 +2095,7 @@
     } else if (patternId === 3) {
       // Black hole gravity well
       if (blackHoleActive) return;
+      SoundEngine.playBlackhole();
       const offset = new THREE.Vector3(
         (Math.random() - 0.5) * 30,
         (Math.random() - 0.5) * 8,
@@ -1990,6 +2232,7 @@
 
     if (isShooting && shootCooldown <= 0 && combatMode) {
       shootCooldown = 0.1; // 10 shots per second
+      SoundEngine.playPlayerLaser();
       
       // Spawn two huge lasers from wingtips
       const leftWingOffset = new THREE.Vector3(-2.0, 0, -2.0).applyQuaternion(player.quaternion);
@@ -2023,6 +2266,7 @@
       // Check collision with dragon
       if (dragon && gameStage === 5) {
         if (laser.position.distanceTo(dragon.position) < 60) {
+          SoundEngine.playHit();
           spawnExplosion(laser.position, 0x00ff00, 10, 0.2);
           scene.remove(laser);
           laser.geometry.dispose();
@@ -2069,6 +2313,7 @@
     for (let i = 0; i < 40; i++) {
       setTimeout(() => {
         if (!dragon) return;
+        SoundEngine.playExplosion();
         const offset = new THREE.Vector3(
           (Math.random() - 0.5) * 120,
           (Math.random() - 0.5) * 120,
