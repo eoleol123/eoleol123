@@ -1950,7 +1950,7 @@
           bm.position.copy(mouthPos);
           
           // Gradually rotate currentDir toward actual player direction (creates the converging effect)
-          dragonBreath.currentDirs[idx].lerp(targetDir, 2.4 * deltaTime).normalize();
+          dragonBreath.currentDirs[idx].lerp(targetDir, 1.2 * deltaTime).normalize();
           bm.quaternion.setFromUnitVectors(zAxis, dragonBreath.currentDirs[idx]);
           
           // Pulse opacity
