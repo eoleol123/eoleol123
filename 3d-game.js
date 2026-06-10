@@ -1417,6 +1417,9 @@
     // Store head group reference for aim tracking
     root.userData.headGroup = headGroup;
 
+    // ── Scale entire dragon 5x ──
+    root.scale.set(5, 5, 5);
+
     return root;
   }
 
@@ -1476,18 +1479,35 @@
       const headWorldPos = new THREE.Vector3();
       hg.getWorldPosition(headWorldPos);
       const fwd = new THREE.Vector3(0, 0, -1).applyQuaternion(hg.getWorldQuaternion(new THREE.Quaternion()));
-      const mouthPos = headWorldPos.clone().addScaledVector(fwd, 60);
+      const mouthPos = headWorldPos.clone().addScaledVector(fwd, 200); // 5x dragon: mouth 200 units ahead
 
       if (dragonBreath.phase === 'charge') {
         // ─ Phase 1: Energy charges at mouth ─
         dragonBreath.chargeTimer -= deltaTime;
         const t = 1.0 - Math.max(0, dragonBreath.chargeTimer) / dragonBreath.chargeDuration;
-        const s = 2 + t * 14;   // sphere grows 2 → 16 units
+        const s = 5 + t * 55;   // grows 5 → 60 units (5x dragon scale)
         dragonBreath.chargeMesh.position.copy(mouthPos);
         dragonBreath.chargeMesh.scale.set(s, s, s);
-        // Pulse colour more intensely as charge nears
-        const pulse = 0.4 + t * 0.6;
+        // Also update halo (1.8x bigger for bloom look)
+        if (dragonBreath.haloMesh) {
+          const hs = s * 1.8;
+          dragonBreath.haloMesh.position.copy(mouthPos);
+          dragonBreath.haloMesh.scale.set(hs, hs, hs);
+          dragonBreath.haloMesh.material.opacity = pulse * 0.5;
+        }
+        // Update charge light intensity
+        if (dragonBreath.chargeLight) {
+          dragonBreath.chargeLight.position.copy(mouthPos);
+          dragonBreath.chargeLight.intensity = 3 + t * 22;
+        }
+        // Pulse opacity strongly near fire
+        const pulse = 0.3 + t * 0.7;
         dragonBreath.chargeMesh.material.opacity = pulse;
+        // Also pulse inner core
+        if (dragonBreath.chargeCoreLight) {
+          dragonBreath.chargeCoreLight.position.copy(mouthPos);
+          dragonBreath.chargeCoreLight.intensity = 1 + t * 12;
+        }
 
         // Lock-on 1 second before firing
         const lockThreshold = 1.0;
@@ -1502,11 +1522,15 @@
           scene.remove(dragonBreath.chargeMesh);
           dragonBreath.chargeMesh.geometry.dispose();
           dragonBreath.chargeMesh.material.dispose();
+          // Clean up halo + lights
+          if (dragonBreath.haloMesh) { scene.remove(dragonBreath.haloMesh); dragonBreath.haloMesh.geometry.dispose(); dragonBreath.haloMesh.material.dispose(); }
+          if (dragonBreath.chargeLight) { scene.remove(dragonBreath.chargeLight); }
+          if (dragonBreath.chargeCoreLight) { scene.remove(dragonBreath.chargeCoreLight); }
 
-          // Build the beam mesh
-          const beamGeo = new THREE.CylinderGeometry(5.0, 5.0, 700, 12);
+          // Build the beam mesh (5x dragon: radius 25, length 2000)
+          const beamGeo = new THREE.CylinderGeometry(25, 25, 2000, 12);
           beamGeo.rotateX(Math.PI / 2);
-          const beamMat = new THREE.MeshBasicMaterial({ color: 0xff4400, transparent: true, opacity: 0.88 });
+          const beamMat = new THREE.MeshBasicMaterial({ color: 0xff4400, transparent: true, opacity: 0.88, blending: THREE.AdditiveBlending, depthWrite: false });
           const beamMesh = new THREE.Mesh(beamGeo, beamMat);
 
           // Initial direction: locked player position
@@ -1515,7 +1539,7 @@
           beamMesh.quaternion.setFromUnitVectors(zAxis, lockDir);
           beamMesh.position.copy(mouthPos);
           scene.add(beamMesh);
-          spawnExplosion(mouthPos, 0xff4400, 20, 1.0);
+          spawnExplosion(mouthPos, 0xff4400, 30, 2.0);
 
           // Random fire duration 2.0 – 4.5 s
           const fireDur = 2.0 + Math.random() * 2.5;
@@ -1523,7 +1547,9 @@
             phase: 'fire',
             beamMesh: beamMesh,
             fireTimer: fireDur,
-            currentDir: lockDir.clone()
+            currentDir: lockDir.clone(),
+            totalDamage: 0,      // track cumulative damage this breath
+            maxDamage: 20        // cap per-breath damage at 20
           };
         }
 
@@ -1546,12 +1572,18 @@
         const pulse = 0.65 + 0.35 * Math.sin(clock.getElapsedTime() * 22);
         bm.material.opacity = pulse;
 
-        // Damage: perpendicular distance from beam axis
+        // Damage: perpendicular distance from beam axis (capped at 20 per breath)
         const toPlayer = new THREE.Vector3().subVectors(player.position, mouthPos);
         const proj = toPlayer.dot(dragonBreath.currentDir);
-        if (proj > 0 && proj < 700) {
+        if (proj > 0 && proj < 700 && dragonBreath.totalDamage < dragonBreath.maxDamage) {
           const perp = toPlayer.clone().addScaledVector(dragonBreath.currentDir, -proj);
-          if (perp.length() < 8.0) takeDamage(2);
+          if (perp.length() < 8.0) {
+            const dmg = Math.min(2, dragonBreath.maxDamage - dragonBreath.totalDamage);
+            if (dmg > 0) {
+              takeDamage(dmg);
+              dragonBreath.totalDamage += dmg;
+            }
+          }
         }
 
         // Beam ends
@@ -1635,14 +1667,38 @@
       const hwp = new THREE.Vector3();
       hg.getWorldPosition(hwp);
       const fwd = new THREE.Vector3(0, 0, -1).applyQuaternion(hg.getWorldQuaternion(new THREE.Quaternion()));
-      chargeMesh.position.copy(hwp.clone().addScaledVector(fwd, 60));
+      chargeMesh.position.copy(hwp.clone().addScaledVector(fwd, 200)); // 5x dragon
       scene.add(chargeMesh);
+
+      // Outer glow halo (larger, more transparent)
+      const haloGeo = new THREE.SphereGeometry(1, 12, 8);
+      const haloMat = new THREE.MeshBasicMaterial({
+        color: 0xff8800,
+        transparent: true,
+        opacity: 0.0,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false
+      });
+      const haloMesh = new THREE.Mesh(haloGeo, haloMat);
+      haloMesh.position.copy(chargeMesh.position);
+      scene.add(haloMesh);
+
+      // Point lights for real scene illumination during charge
+      const chargeLight = new THREE.PointLight(0xff6600, 0, 600);
+      chargeLight.position.copy(chargeMesh.position);
+      scene.add(chargeLight);
+      const chargeCoreLight = new THREE.PointLight(0xffffff, 0, 200);
+      chargeCoreLight.position.copy(chargeMesh.position);
+      scene.add(chargeCoreLight);
 
       // Charge duration: 2.0 – 3.0 s (lock fires 1 s before end)
       const chargeDur = 2.0 + Math.random() * 1.0;
       dragonBreath = {
         phase: 'charge',
         chargeMesh: chargeMesh,
+        haloMesh: haloMesh,
+        chargeLight: chargeLight,
+        chargeCoreLight: chargeCoreLight,
         chargeDuration: chargeDur,
         chargeTimer: chargeDur,
         locked: false,
@@ -1706,6 +1762,9 @@
     // Clean up breath attack
     if (dragonBreath) {
       if (dragonBreath.chargeMesh) { scene.remove(dragonBreath.chargeMesh); dragonBreath.chargeMesh.geometry.dispose(); dragonBreath.chargeMesh.material.dispose(); }
+      if (dragonBreath.haloMesh)   { scene.remove(dragonBreath.haloMesh);   dragonBreath.haloMesh.geometry.dispose();   dragonBreath.haloMesh.material.dispose(); }
+      if (dragonBreath.chargeLight)     { scene.remove(dragonBreath.chargeLight); }
+      if (dragonBreath.chargeCoreLight) { scene.remove(dragonBreath.chargeCoreLight); }
       if (dragonBreath.beamMesh)   { scene.remove(dragonBreath.beamMesh);   dragonBreath.beamMesh.geometry.dispose();   dragonBreath.beamMesh.material.dispose(); }
       dragonBreath = null;
     }
