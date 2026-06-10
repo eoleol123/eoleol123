@@ -16,6 +16,7 @@
   let roll = 0;      // bank angle (tilt left/right)
   let hoverHeight = 0.1; // start on ground
   let hoverVelocity = 0; // vertical speed for smooth acceleration/deceleration
+  let targetHoverHeight = 0.1; // hover height target
 
   // Flight performance constants
   const normalSpeed = 16.0;
@@ -457,11 +458,14 @@
     if (!player) return;
 
     // 1. Hover elevation (Spacebar) - Spring-Damper Physics
-    const targetHeight = keys[' '] ? 3.5 : 0.1;
+    if (keys[' ']) {
+      targetHoverHeight += 5.0 * deltaTime; // climb continuously when holding Spacebar
+    }
+    
     const hoverStiffness = 5.0;
     const hoverDamping = 3.0;
     
-    const hoverForce = hoverStiffness * (targetHeight - hoverHeight) - hoverDamping * hoverVelocity;
+    const hoverForce = hoverStiffness * (targetHoverHeight - hoverHeight) - hoverDamping * hoverVelocity;
     hoverVelocity += hoverForce * deltaTime;
     
     // Clamp vertical speed for safety
@@ -471,6 +475,7 @@
     if (hoverHeight < 0.1) {
       hoverHeight = 0.1;
       hoverVelocity = 0;
+      if (targetHoverHeight < 0.1) targetHoverHeight = 0.1;
     }
 
     // 2. Forward/reverse speed (gradual velocity build-up & slow down)
@@ -553,6 +558,13 @@
     // Move ship
     player.position.addScaledVector(direction, currentSpeed * speedMultiplier * deltaTime);
 
+    // Adjust targetHoverHeight dynamically to follow active flight climbing/diving when manually pitching
+    const isMoving = isMovingForward || isMovingBackward || isBoosting;
+    const isManuallyPitching = keys.ArrowUp || keys.ArrowDown;
+    if (isMoving && isManuallyPitching) {
+      targetHoverHeight = player.position.y;
+    }
+
     // Apply altitude constraints (pull down to hoverHeight, clamp to ground)
     if (player.position.y > hoverHeight) {
       // Pull down to current hoverHeight (faster if Space is not held, simulating gravity)
@@ -565,6 +577,7 @@
 
     if (player.position.y < 0.1) {
       player.position.y = 0.1;
+      if (targetHoverHeight < 0.1) targetHoverHeight = 0.1;
     }
 
     // 5. Thruster scaling and colors (grows based on speed & boost)
