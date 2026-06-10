@@ -143,14 +143,30 @@ document.addEventListener('DOMContentLoaded', () => {
           mimeType = 'video/quicktime';
         }
         playerContainer.innerHTML = `
-          <video controls autoplay playsinline loop>
+          <video controls playsinline loop preload="auto">
             <source src="${videoUrl}" type="${mimeType}">
             이 브라우저는 비디오 태그를 지원하지 않습니다.
           </video>`;
-        activeVideoElement = playerContainer.querySelector('video');
         
-        // Set high quality volume
-        activeVideoElement.volume = 0.8;
+        const video = playerContainer.querySelector('video');
+        activeVideoElement = video;
+        video.volume = 0.8;
+        
+        // Force loading the media resources
+        video.load();
+        
+        // Autoplay Policy Fallback handling
+        const playPromise = video.play();
+        if (playPromise !== undefined) {
+          playPromise.catch(error => {
+            console.warn("Unmuted autoplay prevented. Retrying with muted option:", error);
+            // Fallback to muted playback which is always allowed by browsers
+            video.muted = true;
+            video.play().catch(err => {
+              console.error("Muted playback also failed:", err);
+            });
+          });
+        }
       }
 
 
