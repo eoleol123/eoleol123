@@ -2195,11 +2195,9 @@
       player.position.y = THREE.MathUtils.lerp(player.position.y, hoverHeight, 8.0 * deltaTime);
     }
 
-    // Auto-center camera back behind the ship if the user isn't dragging
-    if (!isDraggingMouse) {
-      cameraYaw = THREE.MathUtils.lerp(cameraYaw, 0, 2.0 * deltaTime);
-      cameraPitch = THREE.MathUtils.lerp(cameraPitch, 0.2, 2.0 * deltaTime);
-    }
+    // Auto-center camera back behind the ship
+    cameraYaw = THREE.MathUtils.lerp(cameraYaw, 0, 2.0 * deltaTime);
+    cameraPitch = THREE.MathUtils.lerp(cameraPitch, 0.2, 2.0 * deltaTime);
 
     // 5. Thruster scaling and colors (grows based on speed & boost)
     if (player.userData.leftThruster && player.userData.rightThruster) {
