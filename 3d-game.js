@@ -1083,54 +1083,314 @@
     }
   }
 
+  // ─── Western Dragon ──────────────────────────────────────────────
+  // Builds a highly polygonal, static Western dragon from primitives.
+  // The dragon never moves — only its head-group pivots to face the player.
+  function buildWesternDragon() {
+    const root = new THREE.Group();
+
+    const scaleDragonMat = (emissInt) => new THREE.MeshStandardMaterial({
+      color: 0x0d2b0a,
+      metalness: 0.85,
+      roughness: 0.25,
+      emissive: 0x1a4a10,
+      emissiveIntensity: emissInt
+    });
+    const boneMat = new THREE.MeshStandardMaterial({ color: 0xd4c07a, metalness: 0.3, roughness: 0.6 });
+    const eyeMat  = new THREE.MeshStandardMaterial({ color: 0xff6600, emissive: 0xff6600, emissiveIntensity: 3.0 });
+    const wingMat = new THREE.MeshStandardMaterial({
+      color: 0x0a1a08, metalness: 0.7, roughness: 0.4,
+      emissive: 0x002200, emissiveIntensity: 0.5,
+      side: THREE.DoubleSide
+    });
+
+    // ── TORSO ──
+    const torsoGeo = new THREE.CapsuleGeometry(28, 70, 12, 20);
+    torsoGeo.rotateZ(Math.PI / 2);
+    const torso = new THREE.Mesh(torsoGeo, scaleDragonMat(0.6));
+    torso.position.set(0, 0, 0);
+    root.add(torso);
+
+    // ── CHEST ──
+    const chestGeo = new THREE.SphereGeometry(32, 14, 12);
+    chestGeo.scale(1.1, 0.85, 0.9);
+    const chest = new THREE.Mesh(chestGeo, scaleDragonMat(0.7));
+    chest.position.set(0, 4, -22);
+    root.add(chest);
+
+    // ── BELLY PLATES (4 plates along underside) ──
+    for (let i = 0; i < 4; i++) {
+      const plateGeo = new THREE.SphereGeometry(22, 8, 6);
+      plateGeo.scale(1.0, 0.25, 0.6);
+      const plate = new THREE.Mesh(plateGeo, new THREE.MeshStandardMaterial({ color: 0x4a7a30, metalness: 0.4, roughness: 0.5 }));
+      plate.position.set(0, -24, -10 + i * 20);
+      root.add(plate);
+    }
+
+    // ── HEAD GROUP (pivots to track player) ──
+    const headGroup = new THREE.Group();
+    headGroup.position.set(0, 18, -80); // front of torso
+    root.add(headGroup);
+
+    // Head base
+    const headGeo = new THREE.SphereGeometry(22, 16, 12);
+    headGeo.scale(1.0, 0.82, 1.4);
+    const head = new THREE.Mesh(headGeo, scaleDragonMat(0.9));
+    headGroup.add(head);
+
+    // Upper jaw / snout
+    const snoutGeo = new THREE.ConeGeometry(14, 40, 8);
+    snoutGeo.rotateX(Math.PI / 2);
+    const snout = new THREE.Mesh(snoutGeo, scaleDragonMat(0.8));
+    snout.position.set(0, -4, -38);
+    headGroup.add(snout);
+
+    // Lower jaw
+    const jawGeo = new THREE.ConeGeometry(12, 34, 8);
+    jawGeo.rotateX(-Math.PI / 2 + 0.3);
+    const jaw = new THREE.Mesh(jawGeo, scaleDragonMat(0.75));
+    jaw.position.set(0, -16, -28);
+    headGroup.add(jaw);
+
+    // Fangs (4)
+    [[-6, -20, -56], [6, -20, -56], [-10, -18, -50], [10, -18, -50]].forEach(([x, y, z]) => {
+      const fangGeo = new THREE.ConeGeometry(2.5, 14, 6);
+      fangGeo.rotateX(Math.PI);
+      const fang = new THREE.Mesh(fangGeo, boneMat);
+      fang.position.set(x, y, z);
+      headGroup.add(fang);
+    });
+
+    // Eyes
+    [[-14, 8, -18], [14, 8, -18]].forEach(([x, y, z]) => {
+      const eyeGeo = new THREE.SphereGeometry(6, 10, 10);
+      const eye = new THREE.Mesh(eyeGeo, eyeMat);
+      eye.position.set(x, y, z);
+      headGroup.add(eye);
+      // Pupil slit
+      const slitGeo = new THREE.SphereGeometry(3.5, 8, 8);
+      slitGeo.scale(0.3, 1, 0.5);
+      const slit = new THREE.Mesh(slitGeo, new THREE.MeshBasicMaterial({ color: 0x000000 }));
+      slit.position.set(x, y, z - 5.5);
+      headGroup.add(slit);
+    });
+
+    // Horns (2 curved horns)
+    [[-16, 20, 0], [16, 20, 0]].forEach(([x, y, z], idx) => {
+      const hornGeo = new THREE.ConeGeometry(4, 32, 8);
+      const horn = new THREE.Mesh(hornGeo, boneMat);
+      horn.position.set(x, y, z);
+      horn.rotation.z = idx === 0 ? -0.45 : 0.45;
+      horn.rotation.x = -0.3;
+      headGroup.add(horn);
+      // Horn tip ridge
+      const tipGeo = new THREE.ConeGeometry(2, 14, 8);
+      const tip = new THREE.Mesh(tipGeo, boneMat);
+      tip.position.set(x + (idx === 0 ? -8 : 8), y + 34, z - 6);
+      tip.rotation.z = horn.rotation.z;
+      headGroup.add(tip);
+    });
+
+    // Brow ridges
+    [[-12, 12, -8], [12, 12, -8]].forEach(([x, y, z]) => {
+      const ridgeGeo = new THREE.SphereGeometry(6, 8, 6);
+      ridgeGeo.scale(1.8, 0.5, 1.2);
+      const ridge = new THREE.Mesh(ridgeGeo, scaleDragonMat(0.4));
+      ridge.position.set(x, y, z);
+      headGroup.add(ridge);
+    });
+
+    // Neck
+    const neckGeo = new THREE.CylinderGeometry(16, 22, 50, 10);
+    neckGeo.rotateX(-0.45);
+    const neck = new THREE.Mesh(neckGeo, scaleDragonMat(0.65));
+    neck.position.set(0, 14, -52);
+    root.add(neck);
+
+    // Neck spines (6 dorsal spines along neck)
+    for (let i = 0; i < 6; i++) {
+      const spineGeo = new THREE.ConeGeometry(3.5, 18, 6);
+      const spine = new THREE.Mesh(spineGeo, boneMat);
+      spine.position.set(0, 28, -32 - i * 8);
+      spine.rotation.x = -0.2;
+      root.add(spine);
+    }
+
+    // Dorsal spines along torso (8 spines)
+    for (let i = 0; i < 8; i++) {
+      const spineH = 20 - i * 1.5;
+      const spineGeo = new THREE.ConeGeometry(3, spineH, 6);
+      const spine = new THREE.Mesh(spineGeo, boneMat);
+      spine.position.set(0, 30, 10 + i * 12);
+      root.add(spine);
+    }
+
+    // ── WINGS ──
+    const buildWing = (side) => {
+      const wingGroup = new THREE.Group();
+
+      // Main wing membrane (large flat shape built from triangles → use PlaneGeometry)
+      const memGeo = new THREE.PlaneGeometry(120, 90, 6, 4);
+      // Taper the top edge to give wing shape
+      const memPos = memGeo.attributes.position;
+      for (let v = 0; v < memPos.count; v++) {
+        const y = memPos.getY(v);
+        if (y > 20) {
+          const taper = (y - 20) / 70;
+          memPos.setX(v, memPos.getX(v) * (1 - taper * 0.7));
+        }
+      }
+      memGeo.computeVertexNormals();
+      const mem = new THREE.Mesh(memGeo, wingMat);
+      mem.position.set(side * 60, 20, 10);
+      mem.rotation.z = side * 0.3;
+      mem.rotation.y = side * -0.15;
+      wingGroup.add(mem);
+
+      // Wing arm bone (thick cylinder)
+      const armGeo = new THREE.CylinderGeometry(5, 7, 80, 10);
+      armGeo.rotateZ(Math.PI / 2);
+      const arm = new THREE.Mesh(armGeo, scaleDragonMat(0.5));
+      arm.position.set(side * 40, 28, 5);
+      wingGroup.add(arm);
+
+      // Wing finger bones (3 fingers spread from tip)
+      for (let f = 0; f < 3; f++) {
+        const fGeo = new THREE.CylinderGeometry(2, 3.5, 65, 8);
+        fGeo.rotateZ(Math.PI / 2);
+        const finger = new THREE.Mesh(fGeo, scaleDragonMat(0.4));
+        const angle = side * (-0.4 + f * 0.3);
+        finger.position.set(side * 90, 25 + f * -8, 5 + f * 15);
+        finger.rotation.z = angle;
+        wingGroup.add(finger);
+      }
+
+      // Wing wrist joint
+      const wristGeo = new THREE.SphereGeometry(8, 10, 8);
+      const wrist = new THREE.Mesh(wristGeo, scaleDragonMat(0.6));
+      wrist.position.set(side * 80, 22, 5);
+      wingGroup.add(wrist);
+
+      root.add(wingGroup);
+    };
+    buildWing(1);
+    buildWing(-1);
+
+    // ── FRONT LEGS ──
+    const buildFrontLeg = (side) => {
+      const lg = new THREE.Group();
+
+      const upperGeo = new THREE.CapsuleGeometry(9, 40, 8, 10);
+      const upper = new THREE.Mesh(upperGeo, scaleDragonMat(0.55));
+      upper.rotation.z = side * 0.5;
+      upper.position.set(side * 34, -30, -30);
+      lg.add(upper);
+
+      const lowerGeo = new THREE.CapsuleGeometry(7, 38, 8, 10);
+      const lower = new THREE.Mesh(lowerGeo, scaleDragonMat(0.5));
+      lower.position.set(side * 44, -58, -35);
+      lower.rotation.z = side * 0.6;
+      lg.add(lower);
+
+      const footGeo = new THREE.SphereGeometry(10, 10, 8);
+      footGeo.scale(1.2, 0.5, 1.5);
+      const foot = new THREE.Mesh(footGeo, scaleDragonMat(0.45));
+      foot.position.set(side * 52, -78, -28);
+      lg.add(foot);
+
+      // Claws
+      for (let c = 0; c < 3; c++) {
+        const clawGeo = new THREE.ConeGeometry(2.5, 12, 6);
+        clawGeo.rotateX(Math.PI / 2);
+        const claw = new THREE.Mesh(clawGeo, boneMat);
+        claw.position.set(side * 52 + (c - 1) * 5, -84, -22 - c * 4);
+        lg.add(claw);
+      }
+      root.add(lg);
+    };
+    buildFrontLeg(1);
+    buildFrontLeg(-1);
+
+    // ── REAR LEGS ──
+    const buildRearLeg = (side) => {
+      const lg = new THREE.Group();
+
+      const upperGeo = new THREE.CapsuleGeometry(11, 45, 8, 10);
+      const upper = new THREE.Mesh(upperGeo, scaleDragonMat(0.55));
+      upper.position.set(side * 36, -28, 30);
+      upper.rotation.z = side * 0.45;
+      lg.add(upper);
+
+      const lowerGeo = new THREE.CapsuleGeometry(9, 40, 8, 10);
+      const lower = new THREE.Mesh(lowerGeo, scaleDragonMat(0.5));
+      lower.position.set(side * 46, -60, 40);
+      lower.rotation.z = side * 0.5;
+      lg.add(lower);
+
+      const footGeo = new THREE.SphereGeometry(12, 10, 8);
+      footGeo.scale(1.2, 0.5, 1.5);
+      const foot = new THREE.Mesh(footGeo, scaleDragonMat(0.45));
+      foot.position.set(side * 54, -82, 50);
+      lg.add(foot);
+
+      for (let c = 0; c < 3; c++) {
+        const clawGeo = new THREE.ConeGeometry(3, 14, 6);
+        clawGeo.rotateX(Math.PI / 2);
+        const claw = new THREE.Mesh(clawGeo, boneMat);
+        claw.position.set(side * 54 + (c - 1) * 6, -90, 56 + c * 4);
+        lg.add(claw);
+      }
+      root.add(lg);
+    };
+    buildRearLeg(1);
+    buildRearLeg(-1);
+
+    // ── TAIL (7 tapered segments) ──
+    let tailZ = 60;
+    let tailR = 22;
+    for (let t = 0; t < 7; t++) {
+      const tGeo = new THREE.CapsuleGeometry(tailR, 30, 8, 10);
+      tGeo.rotateX(Math.PI / 2);
+      const tail = new THREE.Mesh(tGeo, scaleDragonMat(0.5 - t * 0.05));
+      tail.position.set(0, -8 + t * -4, tailZ + t * 28);
+      tail.rotation.y = Math.sin(t * 0.6) * 0.25;
+      root.add(tail);
+      tailR = Math.max(4, tailR - 2.6);
+    }
+
+    // Tail spike
+    const tailSpikeGeo = new THREE.ConeGeometry(8, 40, 8);
+    tailSpikeGeo.rotateX(Math.PI / 2);
+    const tailSpike = new THREE.Mesh(tailSpikeGeo, boneMat);
+    tailSpike.position.set(0, -34, tailZ + 7 * 28 + 20);
+    root.add(tailSpike);
+
+    // ── AMBIENT POINT LIGHT (dragon eyes glow on scene) ──
+    const dragonLight = new THREE.PointLight(0xff6600, 3.5, 350);
+    dragonLight.position.set(0, 18, -80);
+    root.add(dragonLight);
+
+    // Store head group reference for aim tracking
+    root.userData.headGroup = headGroup;
+
+    return root;
+  }
+
   function spawnDragon() {
     despawnDragon();
 
-    dragon = new THREE.Group();
+    // Build static Western dragon
+    dragon = buildWesternDragon();
 
-    // 10x scaled Dragon head
-    const headGeo = new THREE.ConeGeometry(35, 80, 4);
-    headGeo.rotateX(Math.PI / 2);
-    const headMat = new THREE.MeshStandardMaterial({ color: 0x081c15, metalness: 0.9, roughness: 0.25 });
-    const headMesh = new THREE.Mesh(headGeo, headMat);
-    dragon.add(headMesh);
+    // Place far behind ring 20 (index 19), facing the player (forward = -Z)
+    const ring20 = rings[19];
+    const dragonZ = ring20 ? ring20.position.z + 600 : -3000;
+    dragon.position.set(0, 40, dragonZ);
+    dragon.rotation.y = Math.PI; // face toward -Z (toward player approach)
 
-    // Glowing green eyes (10x)
-    const eyeGeo = new THREE.SphereGeometry(5, 8, 8);
-    const eyeMat = new THREE.MeshStandardMaterial({ color: 0x00ff66, emissive: 0x00ff66, emissiveIntensity: 2.0 });
-    const eyeL = new THREE.Mesh(eyeGeo, eyeMat);
-    eyeL.position.set(-16, 10, -25);
-    const eyeR = eyeL.clone();
-    eyeR.position.x = 16;
-    dragon.add(eyeL);
-    dragon.add(eyeR);
-
-    // Position near stage-4 first ring
-    const stage4Ring = rings[15];
-    const baseZ = stage4Ring ? stage4Ring.position.z - 150 : -1200;
     scene.add(dragon);
-    dragon.position.set(0, 30, baseZ);
 
-    // Body segments (10 segments, 10x scale)
-    dragonSegments = [];
-    let prevPos = dragon.position.clone();
-    for (let i = 0; i < 10; i++) {
-      const segGeo = new THREE.SphereGeometry((30 - i * 2.2), 8, 8);
-      const segMat = new THREE.MeshStandardMaterial({
-        color: 0x05130e,
-        metalness: 0.9,
-        roughness: 0.3,
-        emissive: 0x00ff66,
-        emissiveIntensity: 0.45 - (i * 0.045)
-      });
-      const segment = new THREE.Mesh(segGeo, segMat);
-      segment.position.copy(prevPos);
-      segment.position.z += 40.0;
-      scene.add(segment);
-      dragonSegments.push(segment);
-      prevPos = segment.position.clone();
-    }
-
+    dragonSegments = []; // not used for Western dragon
     dragonAttackTimer = 0;
   }
 
@@ -1144,35 +1404,18 @@
       spawnDragon();
     }
 
-    // Slithering central orbit pattern around stage-4 ring zone (10x scale)
-    const time = clock.getElapsedTime();
-    const stage4Ring = rings[15];
-    const orbitZ = stage4Ring ? stage4Ring.position.z - 150 : -1200;
-    const targetX = Math.sin(time * 0.65) * 150;
-    const targetY = 30 + Math.cos(time * 0.45) * 40;
-    const targetZ = orbitZ + Math.sin(time * 0.22) * 50;
-
-    dragon.position.lerp(new THREE.Vector3(targetX, targetY, targetZ), 1.0 * deltaTime);
-    dragon.lookAt(player.position);
-
-    // Body segments follow lag with 10x spacing
-    let lead = dragon;
-    for (let i = 0; i < dragonSegments.length; i++) {
-      const seg = dragonSegments[i];
-      const dir = new THREE.Vector3().subVectors(seg.position, lead.position).normalize();
-      const segSpacing = (38 - i * 0.8); // 10x of original 3.8-0.08i
-      const targetPos = lead.position.clone().addScaledVector(dir, segSpacing);
-      seg.position.lerp(targetPos, 8.0 * deltaTime);
-      seg.lookAt(lead.position);
-      lead = seg;
+    // Dragon body is STATIC — only the head group pivots toward the player
+    const headGroup = dragon.userData.headGroup;
+    if (headGroup && player) {
+      // Convert player world pos to dragon-local space for lookAt
+      const playerLocal = dragon.worldToLocal(player.position.clone());
+      headGroup.lookAt(playerLocal);
     }
 
     // Swirl ring rotation inside active black hole
     if (blackHoleActive && blackHoleActive.group) {
       const swirl = blackHoleActive.group.getObjectByName("swirl");
-      if (swirl) {
-        swirl.rotation.z += 2.5 * deltaTime;
-      }
+      if (swirl) swirl.rotation.z += 2.5 * deltaTime;
     }
 
     // Dragon attacks
@@ -1187,35 +1430,32 @@
     if (activeDragonLaser) {
       activeDragonLaser.timer -= deltaTime;
 
-      // Smoothly rotate dragon head to keep facing player
-      // (dragon.lookAt is already called above, so quaternion is current)
-      // Compute mouth origin (10x: offset -40 from head)
-      const mouthOffset = new THREE.Vector3(0, 0, -40).applyQuaternion(dragon.quaternion);
-      const mouthPos = dragon.position.clone().add(mouthOffset);
+      // Mouth is at headGroup world position + forward offset
+      const headGroup = dragon.userData.headGroup;
+      const headWorldPos = new THREE.Vector3();
+      headGroup.getWorldPosition(headWorldPos);
+      // Push from head centre toward snout (~60 units in local -Z → world)
+      const fwd = new THREE.Vector3(0, 0, -1).applyQuaternion(headGroup.getWorldQuaternion(new THREE.Quaternion()));
+      const mouthPos = headWorldPos.clone().addScaledVector(fwd, 60);
 
-      // Direction from mouth toward player
+      // Beam direction toward player
       const beamDir = new THREE.Vector3().subVectors(player.position, mouthPos).normalize();
-
-      // Align beam mesh: CylinderGeometry is Y-up by default after rotateX(PI/2) → now points along Z.
-      // We need to point it toward beamDir. Build a quaternion from Z→beamDir.
       const zAxis = new THREE.Vector3(0, 0, 1);
       const beamQuat = new THREE.Quaternion().setFromUnitVectors(zAxis, beamDir);
 
       activeDragonLaser.mesh.position.copy(mouthPos);
       activeDragonLaser.mesh.quaternion.copy(beamQuat);
 
-      // Pulse glow intensity for visual effect
-      const pulse = 0.6 + 0.4 * Math.sin(clock.getElapsedTime() * 30);
+      // Pulse glow
+      const pulse = 0.55 + 0.45 * Math.sin(clock.getElapsedTime() * 28);
       activeDragonLaser.mesh.material.opacity = pulse;
 
-      // Damage player if inside the laser cylinder (line-distance check)
+      // Damage check
       const toPlayer = new THREE.Vector3().subVectors(player.position, mouthPos);
       const projLen = toPlayer.dot(beamDir);
-      if (projLen > 0 && projLen < 500) {
+      if (projLen > 0 && projLen < 600) {
         const perp = toPlayer.clone().addScaledVector(beamDir, -projLen);
-        if (perp.length() < 10.0) {
-          takeDamage(3);
-        }
+        if (perp.length() < 10.0) takeDamage(3);
       }
 
       if (activeDragonLaser.timer <= 0) {
@@ -1226,8 +1466,9 @@
       }
     }
 
-    // 2) Update warning bombardment
+    // 2) Warning bombardment
     if (bombardmentActive) {
+      const time = clock.getElapsedTime();
       bombardmentActive.timer -= deltaTime;
       const scale = 1.0 + Math.sin(time * 24) * 0.12;
       bombardmentActive.mesh.scale.set(scale, scale, scale);
@@ -1235,12 +1476,7 @@
       if (bombardmentActive.timer <= 0) {
         const center = bombardmentActive.center;
         spawnExplosion(center, 0xff4500, 30, 0.7);
-
-        // Check range damage
-        if (player.position.distanceTo(center) < 12.0) {
-          takeDamage(5);
-        }
-
+        if (player.position.distanceTo(center) < 12.0) takeDamage(5);
         scene.remove(bombardmentActive.mesh);
         bombardmentActive.mesh.geometry.dispose();
         bombardmentActive.mesh.material.dispose();
@@ -1248,7 +1484,7 @@
       }
     }
 
-    // 3) Update black hole gravitational pull
+    // 3) Black hole gravitational pull
     if (blackHoleActive) {
       blackHoleActive.timer -= deltaTime;
       const center = blackHoleActive.center;
@@ -1259,13 +1495,11 @@
         const pullForce = (28.0 / Math.max(dist, 4.0)) * 1.6;
         player.position.addScaledVector(pullDir.normalize(), pullForce * deltaTime);
       }
-
       if (dist < 3.2) {
         takeDamage(5);
         const bounceDir = new THREE.Vector3().subVectors(player.position, center).normalize();
-        player.position.addScaledVector(bounceDir, 12.0); // bounce back
+        player.position.addScaledVector(bounceDir, 12.0);
       }
-
       if (blackHoleActive.timer <= 0) {
         scene.remove(blackHoleActive.group);
         blackHoleActive.group.traverse(obj => {
@@ -1279,97 +1513,65 @@
 
   function triggerDragonAttack(patternId) {
     if (patternId === 1) {
-      // TRACKING LASER BEAM BREATH — cylinder that follows player each frame
-      if (activeDragonLaser) return; // only one beam at a time
+      // TRACKING LASER BEAM from dragon mouth
+      if (activeDragonLaser) return;
 
-      // Build beam geometry along +Z axis (beam origin at 0,0,0, extends 500 units forward)
-      const beamGeo = new THREE.CylinderGeometry(5.0, 5.0, 500, 16);
-      beamGeo.rotateX(Math.PI / 2); // align along Z axis
-      // Do NOT translate — pivot stays at origin so rotation tracks cleanly
-      const beamMat = new THREE.MeshBasicMaterial({
-        color: 0xff00ff,
-        transparent: true,
-        opacity: 0.85
-      });
+      const beamGeo = new THREE.CylinderGeometry(5.0, 5.0, 600, 16);
+      beamGeo.rotateX(Math.PI / 2);
+      const beamMat = new THREE.MeshBasicMaterial({ color: 0xff4400, transparent: true, opacity: 0.88 });
       const beamMesh = new THREE.Mesh(beamGeo, beamMat);
 
-      // Initial position at dragon mouth (10x: offset -40)
-      const mouthOffset = new THREE.Vector3(0, 0, -40).applyQuaternion(dragon.quaternion);
-      beamMesh.position.copy(dragon.position).add(mouthOffset);
+      // Mouth position (head world pos + forward)
+      const headGroup = dragon.userData.headGroup;
+      const headWorldPos = new THREE.Vector3();
+      headGroup.getWorldPosition(headWorldPos);
+      const fwd = new THREE.Vector3(0, 0, -1).applyQuaternion(headGroup.getWorldQuaternion(new THREE.Quaternion()));
+      const mouthPos = headWorldPos.clone().addScaledVector(fwd, 60);
+      beamMesh.position.copy(mouthPos);
 
-      // Initial direction toward player
-      const beamDir = new THREE.Vector3().subVectors(player.position, beamMesh.position).normalize();
+      const beamDir = new THREE.Vector3().subVectors(player.position, mouthPos).normalize();
       const zAxis = new THREE.Vector3(0, 0, 1);
       beamMesh.quaternion.setFromUnitVectors(zAxis, beamDir);
 
       scene.add(beamMesh);
-      activeDragonLaser = { mesh: beamMesh, timer: 3.0 };
-      showWarningBanner("BOSS ATTACK: DRAGON TRACKING LASER!");
-      spawnExplosion(beamMesh.position, 0xff00ff, 20, 1.0);
+      activeDragonLaser = { mesh: beamMesh, timer: 3.5 };
+      showWarningBanner("BOSS ATTACK: DRAGON FIRE BREATH!");
+      spawnExplosion(mouthPos, 0xff4400, 25, 1.2);
 
-      
     } else if (patternId === 2) {
       // Orbital warning bombardment
       if (bombardmentActive) return;
-
       const center = player.position.clone();
       const warningGeo = new THREE.SphereGeometry(12, 16, 16);
-      const warningMat = new THREE.MeshBasicMaterial({
-        color: 0xff3b30,
-        wireframe: true,
-        transparent: true,
-        opacity: 0.35
-      });
+      const warningMat = new THREE.MeshBasicMaterial({ color: 0xff3b30, wireframe: true, transparent: true, opacity: 0.35 });
       const warningMesh = new THREE.Mesh(warningGeo, warningMat);
       warningMesh.position.copy(center);
-
       scene.add(warningMesh);
-      bombardmentActive = {
-        mesh: warningMesh,
-        center: center,
-        timer: 2.0
-      };
+      bombardmentActive = { mesh: warningMesh, center: center, timer: 2.0 };
       showWarningBanner("WARNING: PLASMATIC BOMBARDMENT!");
-      
+
     } else if (patternId === 3) {
       // Black hole gravity well
       if (blackHoleActive) return;
-
       const offset = new THREE.Vector3(
         (Math.random() - 0.5) * 30,
         (Math.random() - 0.5) * 8,
         -18
       ).applyQuaternion(player.quaternion);
       const center = player.position.clone().add(offset);
-
       const bhGroup = new THREE.Group();
-
       const coreGeo = new THREE.SphereGeometry(2.0, 16, 16);
-      const coreMat = new THREE.MeshBasicMaterial({ color: 0x06000d });
-      const core = new THREE.Mesh(coreGeo, coreMat);
+      const core = new THREE.Mesh(coreGeo, new THREE.MeshBasicMaterial({ color: 0x06000d }));
       bhGroup.add(core);
-
       const torusGeo = new THREE.TorusGeometry(4.0, 0.35, 8, 20);
-      const torusMat = new THREE.MeshStandardMaterial({
-        color: 0x7b00ff,
-        emissive: 0x7b00ff,
-        emissiveIntensity: 1.5,
-        transparent: true,
-        opacity: 0.8
-      });
+      const torusMat = new THREE.MeshStandardMaterial({ color: 0x7b00ff, emissive: 0x7b00ff, emissiveIntensity: 1.5, transparent: true, opacity: 0.8 });
       const torus = new THREE.Mesh(torusGeo, torusMat);
       torus.name = "swirl";
       torus.rotateX(Math.PI / 2);
       bhGroup.add(torus);
-
       bhGroup.position.copy(center);
       scene.add(bhGroup);
-
-      blackHoleActive = {
-        group: bhGroup,
-        center: center,
-        timer: 5.0
-      };
+      blackHoleActive = { group: bhGroup, center: center, timer: 5.0 };
       showWarningBanner("WARNING: GRAVITY BLACK HOLE!");
     }
   }
@@ -1377,6 +1579,10 @@
   function despawnDragon() {
     if (dragon) {
       scene.remove(dragon);
+      dragon.traverse(obj => {
+        if (obj.geometry) obj.geometry.dispose();
+        if (obj.material) obj.material.dispose();
+      });
       dragon = null;
     }
     dragonSegments.forEach(s => scene.remove(s));
@@ -1384,14 +1590,12 @@
     dragonFireballs.forEach(f => scene.remove(f));
     dragonFireballs = [];
 
-    // Remove active laser beam
     if (activeDragonLaser) {
       scene.remove(activeDragonLaser.mesh);
       activeDragonLaser.mesh.geometry.dispose();
       activeDragonLaser.mesh.material.dispose();
       activeDragonLaser = null;
     }
-    
     if (bombardmentActive) {
       scene.remove(bombardmentActive.mesh);
       bombardmentActive = null;
