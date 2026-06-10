@@ -1832,4 +1832,9 @@ footer {
   }
 }
 
+/* General hidden utility for overlays (excluding game-container to preserve transitions) */
+.hidden:not(.game-container) {
+  display: none !important;
+}
+
 
