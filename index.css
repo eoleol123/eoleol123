@@ -1567,4 +1567,269 @@ footer {
   }
 }
 
+/* ==========================================================================
+   3D Space Mission HUD & Screens
+   ========================================================================== */
+.hud-top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  position: absolute;
+  top: 30px;
+  left: 30px;
+  right: 100px; /* Leave space for exit button */
+  pointer-events: none;
+  z-index: 1510;
+}
+
+.hud-hp-box {
+  background: rgba(10, 10, 15, 0.75);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 15px 20px;
+  border-radius: 10px;
+  width: 240px;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.4);
+}
+
+.hud-hp-label {
+  font-family: var(--font-title);
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--color-text-white);
+  margin-bottom: 8px;
+  letter-spacing: 1px;
+}
+
+.hud-hp-label span {
+  color: #ff3b30;
+}
+
+.hud-hp-bar-outer {
+  background: rgba(255, 255, 255, 0.1);
+  height: 10px;
+  border-radius: 5px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.05);
+}
+
+.hud-hp-bar-inner {
+  height: 100%;
+  background: linear-gradient(90deg, #ff3b30, #ff9500);
+  box-shadow: 0 0 10px rgba(255, 59, 48, 0.5);
+  border-radius: 5px;
+  transition: width 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.hud-mission-box {
+  background: rgba(10, 10, 15, 0.75);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 15px 25px;
+  border-radius: 10px;
+  text-align: center;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.4);
+  min-width: 220px;
+}
+
+.hud-mission-ring {
+  font-family: var(--font-title);
+  font-size: 1.2rem;
+  font-weight: 900;
+  color: var(--color-primary);
+  letter-spacing: 1.5px;
+  text-shadow: 0 0 8px var(--color-primary-glow);
+}
+
+.hud-timer-box {
+  font-family: var(--font-title);
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #ff9500;
+  margin-top: 5px;
+  letter-spacing: 1px;
+  animation: pulseTimer 1s infinite alternate;
+}
+
+@keyframes pulseTimer {
+  0% { opacity: 0.7; }
+  100% { opacity: 1; }
+}
+
+.hud-stage-name {
+  font-size: 0.8rem;
+  color: #dddddd;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-top: 4px;
+}
+
+.game-damage-flash {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1530;
+  box-shadow: inset 0 0 0px rgba(255, 59, 48, 0);
+  transition: all 0.15s ease;
+}
+
+.game-damage-flash.flash-active {
+  box-shadow: inset 0 0 50px rgba(255, 59, 48, 0.8);
+  background: rgba(255, 59, 48, 0.15);
+}
+
+.game-warning-overlay {
+  position: absolute;
+  top: 35%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1525;
+  pointer-events: none;
+  text-align: center;
+}
+
+.game-warning-text {
+  font-family: var(--font-title);
+  font-size: 2.2rem;
+  font-weight: 900;
+  color: #ff3b30;
+  background: rgba(15, 0, 0, 0.8);
+  border: 2px solid #ff3b30;
+  padding: 15px 40px;
+  border-radius: 8px;
+  box-shadow: 0 0 30px rgba(255, 59, 48, 0.6), inset 0 0 15px rgba(255, 59, 48, 0.2);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  animation: blinkWarning 0.8s infinite steps(2);
+}
+
+@keyframes blinkWarning {
+  0% { opacity: 1; border-color: #ff3b30; box-shadow: 0 0 30px rgba(255, 59, 48, 0.6); }
+  50% { opacity: 0.2; border-color: transparent; box-shadow: none; }
+}
+
+.game-end-screen {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(3, 3, 5, 0.85);
+  z-index: 1540;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition: opacity 0.5s ease;
+}
+
+.game-end-card {
+  background: rgba(15, 15, 20, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 45px 50px;
+  max-width: 500px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 30px 60px rgba(0,0,0,0.8), inset 0 0 20px rgba(255,255,255,0.03);
+}
+
+.game-end-title {
+  font-family: var(--font-title);
+  font-size: 2.6rem;
+  font-weight: 900;
+  margin-bottom: 15px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.game-over-title {
+  color: #ff3b30;
+  text-shadow: 0 0 20px rgba(255, 59, 48, 0.4);
+}
+
+.game-clear-title {
+  color: var(--color-primary);
+  text-shadow: 0 0 20px var(--color-primary-glow);
+}
+
+.game-end-desc {
+  color: var(--color-text-gray);
+  font-size: 1.05rem;
+  line-height: 1.6;
+  margin-bottom: 35px;
+}
+
+.game-end-btn {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid currentColor;
+  color: var(--color-primary);
+  font-family: var(--font-title);
+  font-size: 1.1rem;
+  font-weight: 800;
+  padding: 14px 45px;
+  border-radius: 30px;
+  cursor: pointer;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.game-over-screen .game-end-btn {
+  color: #ff3b30;
+}
+
+.game-end-btn:hover {
+  background: currentColor;
+  color: #0d0d0d;
+  box-shadow: 0 0 25px currentColor;
+  transform: translateY(-3px);
+}
+
+@media (max-width: 768px) {
+  .hud-top-row {
+    left: 20px;
+    right: 20px;
+    top: 20px;
+  }
+  .hud-hp-box {
+    width: 150px;
+    padding: 10px 12px;
+  }
+  .hud-hp-label {
+    font-size: 0.8rem;
+    margin-bottom: 4px;
+  }
+  .hud-hp-bar-outer {
+    height: 8px;
+  }
+  .hud-mission-box {
+    padding: 10px 15px;
+    min-width: 150px;
+  }
+  .hud-mission-ring {
+    font-size: 0.95rem;
+  }
+  .hud-stage-name {
+    font-size: 0.7rem;
+  }
+  .game-warning-text {
+    font-size: 1.4rem;
+    padding: 10px 20px;
+  }
+  .game-end-card {
+    padding: 30px 25px;
+  }
+  .game-end-title {
+    font-size: 2rem;
+  }
+}
+
 

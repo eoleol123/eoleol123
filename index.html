@@ -488,13 +488,33 @@
        4.7 3D GAMEMODE VIEWPORT OVERLAY
        ========================================================================== -->
   <div id="game-container" class="game-container hidden">
+    <!-- Screen damage vignette flash -->
+    <div id="game-damage-flash" class="game-damage-flash"></div>
+
     <!-- 3D Canvas -->
     <canvas id="game-canvas"></canvas>
 
     <!-- Glassmorphic HUD overlay -->
     <div class="game-hud">
+      <div class="hud-top-row">
+        <!-- Top Left: HP Bar -->
+        <div class="hud-hp-box">
+          <div class="hud-hp-label">HP: <span id="hud-hp-text">100</span> / 100</div>
+          <div class="hud-hp-bar-outer">
+            <div id="hud-hp-bar-inner" class="hud-hp-bar-inner" style="width: 100%;"></div>
+          </div>
+        </div>
+        
+        <!-- Top Center: Mission Status -->
+        <div class="hud-mission-box">
+          <div class="hud-mission-ring">RING <span id="hud-ring-text">1</span> / 20</div>
+          <div id="hud-timer-box" class="hud-timer-box hidden">STAGE TIMER: <span id="hud-timer-text">12.0</span>s</div>
+          <div id="hud-stage-name" class="hud-stage-name">STAGE 1: METEOR SHOWER</div>
+        </div>
+      </div>
+
       <div class="hud-header">
-        <h2 class="hud-title">3D CYBERPUNK WORLD</h2>
+        <h2 class="hud-title">3D SPACE MISSION</h2>
         <span class="hud-status">PLAYER: CYBER FLIGHT SIMULATOR</span>
       </div>
       
@@ -504,6 +524,29 @@
         <div class="guide-item"><span class="kbd">Space</span><span>Hover (Buoyant)</span></div>
         <div class="guide-item"><span class="kbd">Shift</span><span>Engine Booster</span></div>
         <div class="guide-item"><span class="kbd">Q</span><span class="kbd">E</span> / <span class="kbd">▲</span><span class="kbd">▼</span><span>Manual Roll / Pitch</span></div>
+      </div>
+    </div>
+
+    <!-- Live warning alert text banner -->
+    <div id="game-warning-overlay" class="game-warning-overlay hidden">
+      <div id="game-warning-text" class="game-warning-text">WARNING: DANGER DETECTED</div>
+    </div>
+
+    <!-- Game Over Screen -->
+    <div id="game-over-screen" class="game-end-screen hidden">
+      <div class="game-end-card">
+        <h2 class="game-end-title game-over-title">GAME OVER</h2>
+        <p class="game-end-desc">우주선이 파괴되었습니다. 미션을 완료하지 못했습니다.</p>
+        <button id="game-restart-btn-over" class="game-end-btn">MISSION RESTART</button>
+      </div>
+    </div>
+
+    <!-- Mission Clear Screen -->
+    <div id="game-clear-screen" class="game-end-screen hidden">
+      <div class="game-end-card">
+        <h2 class="game-end-title game-clear-title">MISSION CLEAR</h2>
+        <p class="game-end-desc">축하합니다! 모든 링을 안전하게 통과하여 우주 평화를 지켜냈습니다.</p>
+        <button id="game-restart-btn-clear" class="game-end-btn">PLAY AGAIN</button>
       </div>
     </div>
 
