@@ -1138,10 +1138,15 @@
       root.add(plate);
     }
 
-    // ── HEAD GROUP (pivots to track player) ──
+    // ── NECK GROUP (pivots to track player) ──
+    const neckGroup = new THREE.Group();
+    neckGroup.position.set(0, 14, -40); // Pivot point at base of neck
+    root.add(neckGroup);
+
+    // ── HEAD GROUP ──
     const headGroup = new THREE.Group();
-    headGroup.position.set(0, 18, -80); // front of torso
-    root.add(headGroup);
+    headGroup.position.set(0, 4, -40); // Relative to neckGroup (0, 18, -80 in local space)
+    neckGroup.add(headGroup);
 
     // Head base
     const headGeo = new THREE.SphereGeometry(22, 16, 12);
@@ -1215,16 +1220,16 @@
     const neckGeo = new THREE.CylinderGeometry(16, 22, 50, 10);
     neckGeo.rotateX(-0.45);
     const neck = new THREE.Mesh(neckGeo, scaleDragonMat(0.65));
-    neck.position.set(0, 14, -52);
-    root.add(neck);
+    neck.position.set(0, 0, -12); // Relative to neckGroup
+    neckGroup.add(neck);
 
     // Neck spines (6 dorsal spines along neck)
     for (let i = 0; i < 6; i++) {
       const spineGeo = new THREE.ConeGeometry(3.5, 18, 6);
       const spine = new THREE.Mesh(spineGeo, boneMat);
-      spine.position.set(0, 28, -32 - i * 8);
+      spine.position.set(0, 14, 8 - i * 8); // Relative to neckGroup
       spine.rotation.x = -0.2;
-      root.add(spine);
+      neckGroup.add(spine);
     }
 
     // Dorsal spines along torso (8 spines)
@@ -1414,11 +1419,12 @@
     dragonLight.position.set(0, 18, -80);
     root.add(dragonLight);
 
-    // Store head group reference for aim tracking
+    // Store head and neck group reference for aim tracking
     root.userData.headGroup = headGroup;
+    root.userData.neckGroup = neckGroup;
 
-    // ── Scale entire dragon 5x ──
-    root.scale.set(5, 5, 5);
+    // ── Scale entire dragon (reverted to 1x) ──
+    root.scale.set(1, 1, 1);
 
     return root;
   }
@@ -1433,7 +1439,7 @@
     const ring20 = rings[19];
     const dragonZ = ring20 ? ring20.position.z - 600 : -2000;
     dragon.position.set(0, 40, dragonZ);
-    dragon.rotation.y = 0; // default forward = -Z, faces player approaching from +Z side
+    dragon.rotation.y = Math.PI; // rotated 180 degrees to face the rings
 
     scene.add(dragon);
 
@@ -1451,12 +1457,12 @@
       spawnDragon();
     }
 
-    // Dragon body is STATIC — only the head group pivots toward the player
-    const headGroup = dragon.userData.headGroup;
-    if (headGroup && player) {
+    // Dragon body is STATIC — neck and head pivot together toward the player
+    const neckGroup = dragon.userData.neckGroup;
+    if (neckGroup && player) {
       // Convert player world pos to dragon-local space for lookAt
       const playerLocal = dragon.worldToLocal(player.position.clone());
-      headGroup.lookAt(playerLocal);
+      neckGroup.lookAt(playerLocal);
     }
 
     // Swirl ring rotation inside active black hole
@@ -1479,13 +1485,13 @@
       const headWorldPos = new THREE.Vector3();
       hg.getWorldPosition(headWorldPos);
       const fwd = new THREE.Vector3(0, 0, -1).applyQuaternion(hg.getWorldQuaternion(new THREE.Quaternion()));
-      const mouthPos = headWorldPos.clone().addScaledVector(fwd, 200); // 5x dragon: mouth 200 units ahead
+      const mouthPos = headWorldPos.clone().addScaledVector(fwd, 60); // reverted to 60 for 1x dragon
 
       if (dragonBreath.phase === 'charge') {
         // ─ Phase 1: Energy charges at mouth ─
         dragonBreath.chargeTimer -= deltaTime;
         const t = 1.0 - Math.max(0, dragonBreath.chargeTimer) / dragonBreath.chargeDuration;
-        const s = 5 + t * 55;   // grows 5 → 60 units (5x dragon scale)
+        const s = 2 + t * 14;   // reverted to 1x dragon scale (2 -> 16)
         dragonBreath.chargeMesh.position.copy(mouthPos);
         dragonBreath.chargeMesh.scale.set(s, s, s);
         // Also update halo (1.8x bigger for bloom look)
@@ -1527,8 +1533,8 @@
           if (dragonBreath.chargeLight) { scene.remove(dragonBreath.chargeLight); }
           if (dragonBreath.chargeCoreLight) { scene.remove(dragonBreath.chargeCoreLight); }
 
-          // Build the beam mesh (5x dragon: radius 25, length 2000)
-          const beamGeo = new THREE.CylinderGeometry(25, 25, 2000, 12);
+          // Build the beam mesh (reverted to 1x dragon: radius 5, length 700)
+          const beamGeo = new THREE.CylinderGeometry(5.0, 5.0, 700, 12);
           beamGeo.rotateX(Math.PI / 2);
           const beamMat = new THREE.MeshBasicMaterial({ color: 0xff4400, transparent: true, opacity: 0.88, blending: THREE.AdditiveBlending, depthWrite: false });
           const beamMesh = new THREE.Mesh(beamGeo, beamMat);
@@ -1667,7 +1673,7 @@
       const hwp = new THREE.Vector3();
       hg.getWorldPosition(hwp);
       const fwd = new THREE.Vector3(0, 0, -1).applyQuaternion(hg.getWorldQuaternion(new THREE.Quaternion()));
-      chargeMesh.position.copy(hwp.clone().addScaledVector(fwd, 200)); // 5x dragon
+      chargeMesh.position.copy(hwp.clone().addScaledVector(fwd, 60)); // reverted to 60 for 1x dragon
       scene.add(chargeMesh);
 
       // Outer glow halo (larger, more transparent)
