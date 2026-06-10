@@ -1542,9 +1542,9 @@
     // Build static Western dragon
     dragon = buildWesternDragon();
 
-    // Place far behind ring 20 (index 19), forward along player's travel direction (-Z)
+    // Place closely behind ring 20 (index 19), forward along player's travel direction (-Z)
     const ring20 = rings[19];
-    const dragonZ = ring20 ? ring20.position.z - 400 : -2000;
+    const dragonZ = ring20 ? ring20.position.z - 150 : -2000;
     dragon.position.set(0, 40, dragonZ);
     dragon.rotation.y = Math.PI; // rotated 180 degrees to face the rings
 
@@ -1590,16 +1590,18 @@
     }
 
     // Autonomous combat movement
-    if (combatMode && dragon) {
+    if (combatMode && dragon && gameStage === 5) {
       const time = clock.getElapsedTime();
-      const radius = 300; // Keep distance
-      const heightOffset = Math.sin(time * 0.5) * 50;
-      const angle = time * 0.2; // Slow orbit
+      const radius = 250; // Closer combat distance
+      const heightOffset = Math.sin(time * 1.5) * 60; // Faster vertical bob
       const targetZ = player.position.z - radius;
-      const targetX = Math.sin(angle) * 150;
       
-      const targetPos = new THREE.Vector3(targetX, player.position.y + 40 + heightOffset, targetZ);
-      dragon.position.lerp(targetPos, 0.8 * deltaTime);
+      // Aggressive side-to-side strafing
+      const strafeMax = 180;
+      const targetX = Math.sin(time * 0.8) * strafeMax;
+      
+      const targetPos = new THREE.Vector3(targetX, player.position.y + 30 + heightOffset, targetZ);
+      dragon.position.lerp(targetPos, 2.0 * deltaTime);
     }
 
     // ── BREATH ATTACK STATE MACHINE ──
@@ -1989,26 +1991,26 @@
     if (isShooting && shootCooldown <= 0 && combatMode) {
       shootCooldown = 0.1; // 10 shots per second
       
-      // Spawn two lasers from wingtips
-      const leftWingOffset = new THREE.Vector3(-1.2, 0, -1.0).applyQuaternion(player.quaternion);
-      const rightWingOffset = new THREE.Vector3(1.2, 0, -1.0).applyQuaternion(player.quaternion);
+      // Spawn two huge lasers from wingtips
+      const leftWingOffset = new THREE.Vector3(-2.0, 0, -2.0).applyQuaternion(player.quaternion);
+      const rightWingOffset = new THREE.Vector3(2.0, 0, -2.0).applyQuaternion(player.quaternion);
       
       const fwd = new THREE.Vector3(0, 0, -1).applyQuaternion(player.quaternion);
       
-      const laserMat = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-      const laserGeo = new THREE.CylinderGeometry(0.1, 0.1, 4.0, 8);
+      const laserMat = new THREE.MeshBasicMaterial({ color: 0x33ff33, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending });
+      const laserGeo = new THREE.CylinderGeometry(0.4, 0.4, 40.0, 8); // Much larger and longer
       laserGeo.rotateX(Math.PI / 2);
       
       const leftLaser = new THREE.Mesh(laserGeo, laserMat);
       leftLaser.position.copy(player.position).add(leftWingOffset);
       leftLaser.quaternion.copy(player.quaternion);
-      leftLaser.userData = { velocity: fwd.clone().multiplyScalar(400) }; // Fast lasers
+      leftLaser.userData = { velocity: fwd.clone().multiplyScalar(1200) }; // Much faster
       scene.add(leftLaser);
       playerLasers.push(leftLaser);
 
       const rightLaser = leftLaser.clone();
       rightLaser.position.copy(player.position).add(rightWingOffset);
-      rightLaser.userData = { velocity: fwd.clone().multiplyScalar(400) };
+      rightLaser.userData = { velocity: fwd.clone().multiplyScalar(1200) };
       scene.add(rightLaser);
       playerLasers.push(rightLaser);
     }
