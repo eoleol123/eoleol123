@@ -281,7 +281,7 @@
 
   // Flight variables for gradual build-up and slow down
   let currentSpeed = 0;
-  let yaw = Math.PI; // horizontal rotation angle (start facing forward)
+  let yaw = 0; // horizontal rotation angle (start facing forward)
   let pitch = 0;     // vertical angle (nose up/down)
   let roll = 0;      // bank angle (tilt left/right)
   let hoverHeight = 0.1; // start on ground
@@ -603,7 +603,7 @@
 
     // Starting values (Takeoff/ground constraints completely removed)
     player.position.set(0, 15, 0); 
-    player.rotation.set(0, Math.PI, 0); // face forward (Z-)
+    player.rotation.set(0, 0, 0); // face forward (Z-)
   }
 
   function createRingLabel(num) {
@@ -916,7 +916,7 @@
 
     // Reset flight variables (start mid-air in space)
     currentSpeed = 0;
-    yaw = Math.PI;
+    yaw = 0;
     pitch = 0;
     roll = 0;
     hoverHeight = 15;
@@ -931,7 +931,7 @@
     // Reset player position (mid-air in space)
     if (player) {
       player.position.set(0, 15, 0);
-      player.rotation.set(0, Math.PI, 0);
+      player.rotation.set(0, 0, 0);
     }
 
     // Reset HUD text
@@ -1384,7 +1384,7 @@
     player.position.copy(camera.position);
     player.position.y -= 1.5;
     player.position.z -= 4.0;
-    player.rotation.set(0, Math.PI, 0);
+    player.rotation.set(0, 0, 0);
     
     scene.add(player);
 
@@ -1898,29 +1898,43 @@
           if (dragonBreath.chargeLight) { scene.remove(dragonBreath.chargeLight); }
           if (dragonBreath.chargeCoreLight) { scene.remove(dragonBreath.chargeCoreLight); }
 
-          // Build the beam mesh (reverted to 1x dragon: radius 5, length 700)
-          const beamGeo = new THREE.CylinderGeometry(5.0, 5.0, 700, 12);
-          beamGeo.rotateX(Math.PI / 2);
-          const beamMat = new THREE.MeshBasicMaterial({ color: 0xff4400, transparent: true, opacity: 0.88, blending: THREE.AdditiveBlending, depthWrite: false });
-          const beamMesh = new THREE.Mesh(beamGeo, beamMat);
-
-          // Initial direction: locked player position
-          const lockDir = new THREE.Vector3().subVectors(dragonBreath.lockPos, mouthPos).normalize();
-          const zAxis = new THREE.Vector3(0, 0, 1);
-          beamMesh.quaternion.setFromUnitVectors(zAxis, lockDir);
-          beamMesh.position.copy(mouthPos);
-          scene.add(beamMesh);
+          // Create 3 converging beams
+          const beamMeshes = [];
+          const currentDirs = [];
+          const offsets = [
+            new THREE.Vector3(-0.8, 0.4, 0),
+            new THREE.Vector3(0.8, 0.4, 0),
+            new THREE.Vector3(0, 0.8, 0)
+          ];
+          
+          for (let i = 0; i < 3; i++) {
+            const beamGeo = new THREE.CylinderGeometry(2.0, 5.0, 700, 12);
+            beamGeo.rotateX(Math.PI / 2);
+            const beamMat = new THREE.MeshBasicMaterial({ color: 0xff4400, transparent: true, opacity: 0.88, blending: THREE.AdditiveBlending, depthWrite: false });
+            const beamMesh = new THREE.Mesh(beamGeo, beamMat);
+            
+            const lockDir = new THREE.Vector3().subVectors(dragonBreath.lockPos, mouthPos).normalize();
+            lockDir.add(offsets[i]).normalize(); // Spread out initially
+            
+            const zAxis = new THREE.Vector3(0, 0, 1);
+            beamMesh.quaternion.setFromUnitVectors(zAxis, lockDir);
+            beamMesh.position.copy(mouthPos);
+            scene.add(beamMesh);
+            beamMeshes.push(beamMesh);
+            currentDirs.push(lockDir);
+          }
+          
           spawnExplosion(mouthPos, 0xff4400, 30, 2.0);
 
-          // Random fire duration 2.0 – 4.5 s
-          const fireDur = 2.0 + Math.random() * 2.5;
+          // Duration 4.0 - 7.0 s
+          const fireDur = 4.0 + Math.random() * 3.0;
           dragonBreath = {
             phase: 'fire',
-            beamMesh: beamMesh,
+            beamMeshes: beamMeshes,
             fireTimer: fireDur,
-            currentDir: lockDir.clone(),
-            totalDamage: 0,      // track cumulative damage this breath
-            maxDamage: 20        // cap per-breath damage at 20
+            currentDirs: currentDirs,
+            totalDamage: 0,
+            maxDamage: 30
           };
         }
 
@@ -1929,39 +1943,42 @@
         dragonBreath.fireTimer -= deltaTime;
 
         // Compute fresh mouth pos
-        const bm = dragonBreath.beamMesh;
-        bm.position.copy(mouthPos);
-
-        // Gradually rotate currentDir toward actual player direction
         const targetDir = new THREE.Vector3().subVectors(player.position, mouthPos).normalize();
-        dragonBreath.currentDir.lerp(targetDir, 0.6 * deltaTime).normalize();
-
         const zAxis = new THREE.Vector3(0, 0, 1);
-        bm.quaternion.setFromUnitVectors(zAxis, dragonBreath.currentDir);
-
-        // Pulse opacity
-        const pulse = 0.65 + 0.35 * Math.sin(clock.getElapsedTime() * 22);
-        bm.material.opacity = pulse;
-
-        // Damage: perpendicular distance from beam axis (capped at 20 per breath)
-        const toPlayer = new THREE.Vector3().subVectors(player.position, mouthPos);
-        const proj = toPlayer.dot(dragonBreath.currentDir);
-        if (proj > 0 && proj < 700 && dragonBreath.totalDamage < dragonBreath.maxDamage) {
-          const perp = toPlayer.clone().addScaledVector(dragonBreath.currentDir, -proj);
-          if (perp.length() < 8.0) {
-            const dmg = Math.min(2, dragonBreath.maxDamage - dragonBreath.totalDamage);
-            if (dmg > 0) {
-              takeDamage(dmg);
-              dragonBreath.totalDamage += dmg;
+        
+        dragonBreath.beamMeshes.forEach((bm, idx) => {
+          bm.position.copy(mouthPos);
+          
+          // Gradually rotate currentDir toward actual player direction (creates the converging effect)
+          dragonBreath.currentDirs[idx].lerp(targetDir, 2.4 * deltaTime).normalize();
+          bm.quaternion.setFromUnitVectors(zAxis, dragonBreath.currentDirs[idx]);
+          
+          // Pulse opacity
+          const pulse = 0.65 + 0.35 * Math.sin(clock.getElapsedTime() * 22);
+          bm.material.opacity = pulse;
+          
+          // Damage logic (check if player is near this beam)
+          const toPlayer = new THREE.Vector3().subVectors(player.position, mouthPos);
+          const proj = toPlayer.dot(dragonBreath.currentDirs[idx]);
+          if (proj > 0 && proj < 700 && dragonBreath.totalDamage < dragonBreath.maxDamage) {
+            const perp = toPlayer.clone().addScaledVector(dragonBreath.currentDirs[idx], -proj);
+            if (perp.length() < 12.0) {
+              const dmg = Math.min(4, dragonBreath.maxDamage - dragonBreath.totalDamage);
+              if (dmg > 0) {
+                takeDamage(dmg);
+                dragonBreath.totalDamage += dmg;
+              }
             }
           }
-        }
+        });
 
         // Beam ends
         if (dragonBreath.fireTimer <= 0) {
-          scene.remove(bm);
-          bm.geometry.dispose();
-          bm.material.dispose();
+          dragonBreath.beamMeshes.forEach(bm => {
+            scene.remove(bm);
+            bm.geometry.dispose();
+            bm.material.dispose();
+          });
           dragonBreath = null;
         }
       }
