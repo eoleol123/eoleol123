@@ -12,6 +12,9 @@
   let animationFrameId = null;
   let isGameActive = false;
 
+  // Rigged skeleton bones for procedural walking animation
+  let bones = { leftLeg: null, rightLeg: null, leftArm: null, rightArm: null };
+
   // Key states
   const keys = { w: false, a: false, s: false, d: false, Shift: false, ' ': false };
 
@@ -82,13 +85,14 @@
 
     clock = new THREE.Clock();
 
-    // OrbitControls for camera
+    // OrbitControls for camera (locked 3rd person follow style)
     controls = new THREE.OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
     controls.maxPolarAngle = Math.PI / 2 - 0.05; // Don't go below ground
-    controls.minDistance = 3.5;
-    controls.maxDistance = 18;
+    controls.minDistance = 3.0;
+    controls.maxDistance = 15;
+    controls.enablePan = false; // Disable panning to replicate Unreal spring arm look
 
     // Ambient light (Dark purple / Cyberpunk vibe)
     const ambientLight = new THREE.AmbientLight(0x0e0d1f, 0.7);
@@ -197,6 +201,72 @@
       });
     }
 
+    function findBones(root) {
+      bones = { leftLeg: null, rightLeg: null, leftArm: null, rightArm: null };
+      root.traverse((child) => {
+        if (child.isBone) {
+          const name = child.name.toLowerCase();
+          
+          // Thigh/leg bone mapping
+          if (name.includes('upperleg') || name.includes('thigh') || name.includes('upleg') || name.includes('leg_l') || name.includes('leg_r')) {
+            if (name.includes('left') || name.includes('_l_') || name.endsWith('_l') || name.includes('l_upperleg') || name.includes('l_thigh')) {
+              bones.leftLeg = child;
+            } else if (name.includes('right') || name.includes('_r_') || name.endsWith('_r') || name.includes('r_upperleg') || name.includes('r_thigh')) {
+              bones.rightLeg = child;
+            }
+          }
+          
+          // Upper arm bone mapping
+          if (name.includes('upperarm') || name.includes('arm') || name.includes('shoulder')) {
+            if (name.includes('left') || name.includes('_l_') || name.endsWith('_l') || name.includes('l_upperarm')) {
+              bones.leftArm = child;
+            } else if (name.includes('right') || name.includes('_r_') || name.endsWith('_r') || name.includes('r_upperarm')) {
+              bones.rightArm = child;
+            }
+          }
+        }
+      });
+      console.log("Procedural bones found:", bones);
+    }
+
+    function loadLocalTextures(root) {
+      const textureLoader = new THREE.TextureLoader();
+      const texturePaths = {
+        hair: 'assets/hair.png',
+        face: 'assets/face.png',
+        body: 'assets/body.png',
+        outfit: 'assets/outfit.png'
+      };
+
+      root.traverse((child) => {
+        if (child.isMesh && child.material) {
+          const name = child.name.toLowerCase();
+          const mats = Array.isArray(child.material) ? child.material : [child.material];
+          
+          mats.forEach((mat) => {
+            let targetTexture = null;
+            if (name.includes('hair')) targetTexture = texturePaths.hair;
+            else if (name.includes('face') || name.includes('eye')) targetTexture = texturePaths.face;
+            else if (name.includes('body') || name.includes('skin')) targetTexture = texturePaths.body;
+            else if (name.includes('outfit') || name.includes('cloth') || name.includes('f00_000')) targetTexture = texturePaths.outfit;
+            
+            if (targetTexture) {
+              textureLoader.load(targetTexture, (tex) => {
+                tex.encoding = THREE.sRGBEncoding;
+                tex.flipY = false;
+                mat.map = tex;
+                mat.color.setHex(0xffffff); // Reset color to white for texturing
+                mat.needsUpdate = true;
+                console.log("Successfully mapped local texture:", targetTexture);
+              }, undefined, (err) => {
+                // Ignore texture load failure (CORS/missing file)
+              });
+            }
+          });
+        }
+      });
+    }
+
     function setupPlayer(fbx) {
       player = fbx;
       
@@ -213,19 +283,26 @@
       player.position.set(0, 0, 0);
       player.rotation.set(0, Math.PI, 0); // Face forward (away from camera initially)
       
+      // 1. Detect skeleton bones
+      findBones(player);
+
+      // 2. Traver and optimize materials
       player.traverse((child) => {
         if (child.isMesh) {
           child.castShadow = true;
           child.receiveShadow = true;
           if (child.material) {
             if (Array.isArray(child.material)) {
-              child.material.forEach(mat => optimizeMaterial(mat));
+              child.material.forEach(mat => optimizeMaterial(mat, child.name));
             } else {
-              optimizeMaterial(child.material);
+              optimizeMaterial(child.material, child.name);
             }
           }
         }
       });
+
+      // 3. Attempt to load textures from assets/ (if provided by user)
+      loadLocalTextures(player);
 
       scene.add(player);
 
@@ -265,11 +342,37 @@
     window.addEventListener('resize', onWindowResize);
   }
 
-  function optimizeMaterial(material) {
-    material.roughness = 0.3;
-    material.metalness = 0.8;
-    if (material.color) {
-      material.color.multiplyScalar(1.2); // Saturated colors
+  function optimizeMaterial(material, meshName) {
+    material.roughness = 0.4;
+    material.metalness = 0.1;
+    
+    if (meshName) {
+      const name = meshName.toLowerCase();
+      
+      // Procedural color mapping if texture map is missing
+      if (!material.map) {
+        if (name.includes('hair')) {
+          material.color.setHex(0x18181c); // Black Hair
+          material.roughness = 0.8;
+          material.metalness = 0.0;
+        } else if (name.includes('face') || name.includes('skin') || name.includes('body')) {
+          material.color.setHex(0xffdbac); // Skin Tone
+          material.roughness = 0.6;
+          material.metalness = 0.0;
+        } else if (name.includes('eye')) {
+          material.color.setHex(0x39ff14); // Green Eyes
+          if (material.emissive) material.emissive.setHex(0x113311);
+        } else if (name.includes('leg') || name.includes('stocking') || name.includes('socks')) {
+          material.color.setHex(0x39ff14); // Green Stockings
+          material.roughness = 0.5;
+        } else {
+          material.color.setHex(0x18181c); // Dark Outfit
+          material.roughness = 0.3;
+          material.metalness = 0.7; // Metallic Cyber-suit look
+        }
+      }
+    } else if (material.color) {
+      material.color.multiplyScalar(1.2);
     }
   }
 
@@ -492,8 +595,49 @@
       }
     }
 
-    // Procedural movement animation fallback (if no animations are found in FBX)
-    if (!mixer) {
+    // Procedural bone skeletal swing (if FBX is in a static T-pose / has no walking animation clips)
+    const hasProceduralBones = bones.leftLeg || bones.rightLeg || bones.leftArm || bones.rightArm;
+    if (hasProceduralBones) {
+      if (isMoving) {
+        const time = clock.getElapsedTime() * (isRunning ? 14 : 9);
+        const swing = Math.sin(time) * 0.45;
+        
+        if (bones.leftLeg) bones.leftLeg.rotation.x = swing;
+        if (bones.rightLeg) bones.rightLeg.rotation.x = -swing;
+        
+        if (bones.leftArm) {
+          bones.leftArm.rotation.x = -swing * 0.6;
+          bones.leftArm.rotation.z = -1.2; // Relax arms down from T-pose
+        }
+        if (bones.rightArm) {
+          bones.rightArm.rotation.x = swing * 0.6;
+          bones.rightArm.rotation.z = 1.2; // Relax arms down from T-pose
+        }
+        
+        // Procedural bounce
+        if (!isJumping) {
+          player.position.y = Math.abs(Math.sin(time * 2)) * 0.06;
+        }
+      } else {
+        // Natural standing A-pose/idle (relax arms down, straighten legs)
+        if (bones.leftLeg) bones.leftLeg.rotation.x = 0;
+        if (bones.rightLeg) bones.rightLeg.rotation.x = 0;
+        
+        if (bones.leftArm) {
+          bones.leftArm.rotation.x = 0;
+          bones.leftArm.rotation.z = -1.2;
+        }
+        if (bones.rightArm) {
+          bones.rightArm.rotation.x = 0;
+          bones.rightArm.rotation.z = 1.2;
+        }
+        
+        if (!isJumping) {
+          player.position.y = 0;
+        }
+      }
+    } else if (!mixer) {
+      // Bobbing fallback if bones not detected
       if (isMoving && !isJumping) {
         player.position.y = Math.sin(clock.getElapsedTime() * (isRunning ? 14 : 9)) * 0.08;
       } else if (!isJumping) {
