@@ -15,6 +15,11 @@
   // Rigged skeleton bones for procedural walking animation
   let bones = { leftLeg: null, rightLeg: null, leftArm: null, rightArm: null };
 
+  // Custom camera Yaw/Pitch for mouse look (independent of OrbitControls)
+  let cameraYaw = 0;
+  let cameraPitch = 0.2; // slight downward angle
+  let isDraggingMouse = false;
+
   // Key states
   const keys = { w: false, a: false, s: false, d: false, Shift: false, ' ': false };
 
@@ -205,7 +210,7 @@
     function findBones(root) {
       bones = { leftLeg: null, rightLeg: null, leftArm: null, rightArm: null };
       root.traverse((child) => {
-        if (child.isBone) {
+        if (child.isBone || child.type === 'Bone' || child.name.toLowerCase().includes('j_bip_')) {
           const name = child.name.toLowerCase();
           
           // Thigh/leg bone mapping (checking suffix to avoid J_Bip_L_ prefix conflict)
@@ -476,11 +481,42 @@
   function bindInput() {
     window.addEventListener('keydown', onKeyDown);
     window.addEventListener('keyup', onKeyUp);
+    
+    // Custom camera look drag events
+    gameCanvas.addEventListener('mousedown', onMouseDown);
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
+    
+    // Force focus to start capturing keyboard immediately
+    window.focus();
+    gameCanvas.focus();
   }
 
   function unbindInput() {
     window.removeEventListener('keydown', onKeyDown);
     window.removeEventListener('keyup', onKeyUp);
+    
+    if (gameCanvas) gameCanvas.removeEventListener('mousedown', onMouseDown);
+    window.removeEventListener('mousemove', onMouseMove);
+    window.removeEventListener('mouseup', onMouseUp);
+  }
+
+  function onMouseDown(e) {
+    if (e.button === 0 || e.button === 2) {
+      isDraggingMouse = true;
+    }
+  }
+
+  function onMouseMove(e) {
+    if (isDraggingMouse) {
+      cameraYaw -= e.movementX * 0.005;
+      cameraPitch += e.movementY * 0.005;
+      cameraPitch = Math.max(-0.3, Math.min(0.6, cameraPitch));
+    }
+  }
+
+  function onMouseUp(e) {
+    isDraggingMouse = false;
   }
 
   function onKeyDown(e) {
@@ -547,9 +583,31 @@
     // Update controls and physics
     updatePlayerPhysics(deltaTime);
 
-    // Orbit Follow Target Update (focuses slightly above player feet)
-    if (player && controls) {
-      controls.target.copy(player.position).y += 1.0;
+    // Camera follow logic
+    if (player) {
+      if (controls) controls.enabled = false; // Disable OrbitControls to let custom follow camera run
+      
+      // Calculate position behind the player based on cameraYaw and cameraPitch
+      const relativeCameraHolder = new THREE.Vector3(0, 2.3, 4.0); // 4 units behind, 2.3 units up
+      
+      const euler = new THREE.Euler(cameraPitch, cameraYaw, 0, 'YXZ');
+      const quat = new THREE.Quaternion().setFromEuler(euler);
+      
+      // Combine player's rotation and mouse look offset
+      const combinedRotation = player.quaternion.clone().multiply(quat);
+      
+      relativeCameraHolder.applyQuaternion(combinedRotation);
+      relativeCameraHolder.add(player.position);
+      
+      // Smooth follow position (lerp)
+      camera.position.lerp(relativeCameraHolder, 0.08);
+      
+      // Look at target slightly above player position
+      const lookAtPos = player.position.clone();
+      lookAtPos.y += 1.2; // chest level
+      camera.lookAt(lookAtPos);
+    } else if (controls) {
+      controls.enabled = true;
       controls.update();
     }
 
