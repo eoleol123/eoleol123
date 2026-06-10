@@ -44,6 +44,13 @@
   let dragonAttackTimer = 0;
   // Breath charge sequence: { mesh, phase:'charge'|'fire', chargeTimer, lockPos, fireTimer, fireDuration, currentDir }
   let dragonBreath = null;
+  
+  // Combat mode state
+  let isShooting = false;
+  let shootCooldown = 0;
+  let playerLasers = [];
+  let dragonHP = 1000;
+  const maxDragonHP = 1000;
 
   // Flight variables for gradual build-up and slow down
   let currentSpeed = 0;
@@ -68,7 +75,6 @@
   // Custom camera look angle offsets
   let cameraYaw = 0;
   let cameraPitch = 0.2; // slight down-look angle
-  let isDraggingMouse = false;
 
   // Keyboard key states
   const keys = { 
@@ -153,8 +159,7 @@
     scene = new THREE.Scene();
     scene.background = new THREE.Color(0x020204);
     scene.fog = new THREE.FogExp2(0x020204, 0.006);
-
-    camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 3000);
     camera.position.set(0, 2.5, 5.0);
 
     renderer = new THREE.WebGLRenderer({ canvas: gameCanvas, antialias: true, alpha: false });
@@ -574,21 +579,19 @@
   }
 
   function onMouseDown(e) {
-    if (e.button === 0 || e.button === 2) {
-      isDraggingMouse = true;
+    if (e.button === 0 && gameStage === 5) {
+      isShooting = true;
     }
   }
 
   function onMouseMove(e) {
-    if (isDraggingMouse) {
-      cameraYaw -= e.movementX * 0.005;
-      cameraPitch += e.movementY * 0.005;
-      cameraPitch = Math.max(-0.4, Math.min(0.6, cameraPitch));
-    }
+    // Mouse dragging removed for combat mode requirement
   }
 
   function onMouseUp(e) {
-    isDraggingMouse = false;
+    if (e.button === 0) {
+      isShooting = false;
+    }
   }
 
   function onWindowResize() {
@@ -799,11 +802,6 @@
     const ringText = document.getElementById('hud-ring-text');
     if (ringText) ringText.innerText = Math.min(currentRingIndex + 1, 20);
 
-    if (currentRingIndex >= 20) {
-      triggerMissionClear();
-      return;
-    }
-
     if (gameStage === 3) {
       stage3Timer = 12.0;
     }
@@ -831,11 +829,19 @@
         showWarningBanner("WARNING: QUANTUM TELEPORTATION ACTIVE!");
         if (stageName) stageName.innerText = "STAGE 3: TIMED CHASE";
       }
-    } else {
+    } else if (currentRingIndex < 20) {
       if (gameStage !== 4) {
         gameStage = 4;
         showWarningBanner("BOSS BATTLE: CYBER DRAGON AWOKEN!");
-        if (stageName) stageName.innerText = "FINAL STAGE: DRAGON BOSS";
+        if (stageName) stageName.innerText = "STAGE 4: APPROACH DRAGON";
+      }
+    } else {
+      if (gameStage !== 5) {
+        gameStage = 5;
+        combatMode = true;
+        showWarningBanner("COMBAT MODE ENGAGED: DESTROY THE DRAGON!");
+        if (stageName) stageName.innerText = "FINAL STAGE: COMBAT MODE";
+        initCombatMode();
       }
     }
     // Refresh ring visibility on any stage change
@@ -1085,6 +1091,106 @@
     }
   }
 
+  function initCombatMode() {
+    // Transform Spaceship (2x size combat version)
+    scene.remove(player);
+    player.traverse(obj => {
+      if (obj.geometry) obj.geometry.dispose();
+      if (obj.material) obj.material.dispose();
+    });
+    
+    player = new THREE.Group();
+    
+    // Combat Body
+    const bodyGeo = new THREE.ConeGeometry(1.2, 5.5, 8);
+    bodyGeo.rotateX(Math.PI / 2);
+    const bodyMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.3, metalness: 0.9 });
+    const body = new THREE.Mesh(bodyGeo, bodyMat);
+    player.add(body);
+    
+    // Combat Cockpit
+    const cockpitGeo = new THREE.SphereGeometry(0.7, 16, 16);
+    cockpitGeo.scale(1.0, 0.6, 1.8);
+    const cockpitMat = new THREE.MeshStandardMaterial({ color: 0xff0000, emissive: 0xaa0000, roughness: 0.1, metalness: 0.8 });
+    const cockpit = new THREE.Mesh(cockpitGeo, cockpitMat);
+    cockpit.position.set(0, 0.5, -0.8);
+    player.add(cockpit);
+    
+    // Combat Wings (Swept forward)
+    const wingGeo = new THREE.ConeGeometry(2.5, 6.0, 3);
+    wingGeo.rotateX(Math.PI / 2);
+    wingGeo.rotateZ(Math.PI / 2);
+    wingGeo.scale(1.0, 0.2, 1.0);
+    const wings = new THREE.Mesh(wingGeo, bodyMat);
+    wings.position.set(0, 0, 1.0);
+    player.add(wings);
+
+    // Thrusters
+    const thrusterGeo = new THREE.ConeGeometry(0.4, 1.0, 8);
+    thrusterGeo.rotateX(-Math.PI / 2);
+    thrusterGeo.translate(0, 0, 0.5);
+    const thrusterMat = new THREE.MeshBasicMaterial({ color: 0xff3300, transparent: true, opacity: 0.85 });
+    const leftThruster = new THREE.Mesh(thrusterGeo, thrusterMat);
+    leftThruster.position.set(-0.8, -0.2, 2.8);
+    player.add(leftThruster);
+    const rightThruster = leftThruster.clone();
+    rightThruster.position.x = 0.8;
+    player.add(rightThruster);
+
+    // Save references for dynamic thruster scaling
+    player.userData = {
+      leftThruster: leftThruster,
+      rightThruster: rightThruster
+    };
+
+    // Keep old position and rotation
+    player.position.copy(camera.position);
+    player.position.y -= 1.5;
+    player.position.z -= 4.0;
+    player.rotation.set(0, Math.PI, 0);
+    
+    scene.add(player);
+
+    // Boss HP UI Setup
+    const bossUI = document.createElement('div');
+    bossUI.id = 'boss-hp-container';
+    bossUI.style.position = 'absolute';
+    bossUI.style.top = '20px';
+    bossUI.style.left = '50%';
+    bossUI.style.transform = 'translateX(-50%)';
+    bossUI.style.width = '600px';
+    bossUI.style.textAlign = 'center';
+    bossUI.style.color = '#ff3300';
+    bossUI.style.fontFamily = "'Courier New', Courier, monospace";
+    bossUI.style.textShadow = '0 0 10px #ff3300';
+    bossUI.style.zIndex = '100';
+
+    const bossTitle = document.createElement('div');
+    bossTitle.innerText = 'CYBER DRAGON HP';
+    bossTitle.style.fontSize = '24px';
+    bossTitle.style.fontWeight = 'bold';
+    bossTitle.style.marginBottom = '5px';
+    bossUI.appendChild(bossTitle);
+
+    const barBg = document.createElement('div');
+    barBg.style.width = '100%';
+    barBg.style.height = '25px';
+    barBg.style.backgroundColor = 'rgba(50, 0, 0, 0.7)';
+    barBg.style.border = '2px solid #ff3300';
+    barBg.style.boxShadow = '0 0 15px rgba(255, 50, 0, 0.5)';
+
+    const barFill = document.createElement('div');
+    barFill.id = 'boss-hp-fill';
+    barFill.style.width = '100%';
+    barFill.style.height = '100%';
+    barFill.style.backgroundColor = '#ff3300';
+    barFill.style.transition = 'width 0.2s ease-out';
+    
+    barBg.appendChild(barFill);
+    bossUI.appendChild(barBg);
+    gameContainer.appendChild(bossUI);
+  }
+
   // ─── Western Dragon ──────────────────────────────────────────────
   // Builds a highly polygonal, static Western dragon from primitives.
   // The dragon never moves — only its head-group pivots to face the player.
@@ -1092,11 +1198,11 @@
     const root = new THREE.Group();
 
     const scaleDragonMat = (emissInt) => new THREE.MeshStandardMaterial({
-      color: 0x0d2b0a,
-      metalness: 0.85,
-      roughness: 0.25,
-      emissive: 0x1a4a10,
-      emissiveIntensity: emissInt
+      color: 0x111115,
+      emissive: 0x00aaff,
+      emissiveIntensity: emissInt * 2.5,
+      roughness: 0.3,
+      metalness: 0.85
     });
     const boneMat = new THREE.MeshStandardMaterial({ color: 0xd4c07a, metalness: 0.3, roughness: 0.6 });
     const eyeMat  = new THREE.MeshStandardMaterial({ color: 0xff6600, emissive: 0xff6600, emissiveIntensity: 3.0 });
@@ -1437,7 +1543,7 @@
 
     // Place far behind ring 20 (index 19), forward along player's travel direction (-Z)
     const ring20 = rings[19];
-    const dragonZ = ring20 ? ring20.position.z - 600 : -2000;
+    const dragonZ = ring20 ? ring20.position.z - 400 : -2000;
     dragon.position.set(0, 40, dragonZ);
     dragon.rotation.y = Math.PI; // rotated 180 degrees to face the rings
 
@@ -1448,7 +1554,7 @@
   }
 
   function updateDragon(deltaTime) {
-    if (gameStage !== 4) {
+    if (gameStage !== 4 && gameStage !== 5 && gameStage !== 6) {
       despawnDragon();
       return;
     }
@@ -1471,12 +1577,28 @@
       if (swirl) swirl.rotation.z += 2.5 * deltaTime;
     }
 
-    // Dragon attacks
-    dragonAttackTimer += deltaTime;
-    if (dragonAttackTimer >= 4.0) {
-      dragonAttackTimer = 0;
-      const roll = Math.floor(Math.random() * 3) + 1;
-      triggerDragonAttack(roll);
+    // Dragon attacks (only in stage 4 or 5)
+    if (gameStage === 4 || gameStage === 5) {
+      dragonAttackTimer += deltaTime;
+      const attackThreshold = combatMode ? 2.0 : 4.0;
+      if (dragonAttackTimer >= attackThreshold) {
+        dragonAttackTimer = 0;
+        const roll = Math.floor(Math.random() * 3) + 1;
+        triggerDragonAttack(roll);
+      }
+    }
+
+    // Autonomous combat movement
+    if (combatMode && dragon) {
+      const time = clock.getElapsedTime();
+      const radius = 300; // Keep distance
+      const heightOffset = Math.sin(time * 0.5) * 50;
+      const angle = time * 0.2; // Slow orbit
+      const targetZ = player.position.z - radius;
+      const targetX = Math.sin(angle) * 150;
+      
+      const targetPos = new THREE.Vector3(targetX, player.position.y + 40 + heightOffset, targetZ);
+      dragon.position.lerp(targetPos, 0.8 * deltaTime);
     }
 
     // ── BREATH ATTACK STATE MACHINE ──
@@ -1808,6 +1930,7 @@
     updateMeteors(deltaTime);
     updatePirateShip(deltaTime);
     updateDragon(deltaTime);
+    updatePlayerShooting(deltaTime);
 
     // Update explosive particles
     updateParticles(deltaTime);
@@ -1857,6 +1980,106 @@
     }
 
     renderer.render(scene, camera);
+  }
+
+  function updatePlayerShooting(deltaTime) {
+    if (shootCooldown > 0) shootCooldown -= deltaTime;
+
+    if (isShooting && shootCooldown <= 0 && combatMode) {
+      shootCooldown = 0.1; // 10 shots per second
+      
+      // Spawn two lasers from wingtips
+      const leftWingOffset = new THREE.Vector3(-1.2, 0, -1.0).applyQuaternion(player.quaternion);
+      const rightWingOffset = new THREE.Vector3(1.2, 0, -1.0).applyQuaternion(player.quaternion);
+      
+      const fwd = new THREE.Vector3(0, 0, -1).applyQuaternion(player.quaternion);
+      
+      const laserMat = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+      const laserGeo = new THREE.CylinderGeometry(0.1, 0.1, 4.0, 8);
+      laserGeo.rotateX(Math.PI / 2);
+      
+      const leftLaser = new THREE.Mesh(laserGeo, laserMat);
+      leftLaser.position.copy(player.position).add(leftWingOffset);
+      leftLaser.quaternion.copy(player.quaternion);
+      leftLaser.userData = { velocity: fwd.clone().multiplyScalar(400) }; // Fast lasers
+      scene.add(leftLaser);
+      playerLasers.push(leftLaser);
+
+      const rightLaser = leftLaser.clone();
+      rightLaser.position.copy(player.position).add(rightWingOffset);
+      rightLaser.userData = { velocity: fwd.clone().multiplyScalar(400) };
+      scene.add(rightLaser);
+      playerLasers.push(rightLaser);
+    }
+
+    // Update lasers
+    for (let i = playerLasers.length - 1; i >= 0; i--) {
+      const laser = playerLasers[i];
+      laser.position.addScaledVector(laser.userData.velocity, deltaTime);
+      
+      // Check collision with dragon
+      if (dragon && gameStage === 5) {
+        if (laser.position.distanceTo(dragon.position) < 60) {
+          spawnExplosion(laser.position, 0x00ff00, 10, 0.2);
+          scene.remove(laser);
+          laser.geometry.dispose();
+          laser.material.dispose();
+          playerLasers.splice(i, 1);
+          
+          dragonHP -= 5;
+          updateBossUI();
+          continue;
+        }
+      }
+      
+      // Remove if too far
+      if (laser.position.distanceTo(player.position) > 1000) {
+        scene.remove(laser);
+        laser.geometry.dispose();
+        laser.material.dispose();
+        playerLasers.splice(i, 1);
+      }
+    }
+  }
+
+  function updateBossUI() {
+    const fill = document.getElementById('boss-hp-fill');
+    if (fill) {
+      fill.style.width = Math.max(0, (dragonHP / maxDragonHP) * 100) + '%';
+    }
+    if (dragonHP <= 0 && gameStage === 5) {
+      triggerDragonDeath();
+    }
+  }
+
+  function triggerDragonDeath() {
+    gameStage = 6; // Stop further attacks
+    combatMode = false;
+    isShooting = false;
+    showWarningBanner("CYBER DRAGON DEFEATED!");
+    
+    // Hide UI
+    const bossUI = document.getElementById('boss-hp-container');
+    if (bossUI) bossUI.style.display = 'none';
+
+    // Massive explosions
+    for (let i = 0; i < 40; i++) {
+      setTimeout(() => {
+        if (!dragon) return;
+        const offset = new THREE.Vector3(
+          (Math.random() - 0.5) * 120,
+          (Math.random() - 0.5) * 120,
+          (Math.random() - 0.5) * 120
+        );
+        const explosionPos = dragon.position.clone().add(offset);
+        spawnExplosion(explosionPos, 0xffaa00, 150, 1.5);
+      }, i * 120);
+    }
+
+    setTimeout(() => {
+      despawnDragon();
+      triggerMissionClear();
+    }, 4500);
   }
 
   function updatePlayerPhysics(deltaTime) {
