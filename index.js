@@ -237,4 +237,107 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   }
+
+  // ==========================================================================
+  // F. Interactive Skill Detail Viewer
+  // ==========================================================================
+  const skillData = {
+    unreal: {
+      title: "Unreal Engine Portfolio",
+      subtitle: "언리얼 시네마틱 영상 제작 & 레벨 디자인",
+      images: ["assets/IMG_언리얼.jpg"]
+    },
+    unity: {
+      title: "Unity 3D Portfolio",
+      subtitle: "유니티 3D & 가상현실(VR) 개발",
+      images: ["assets/IMG_유니티.jpg"]
+    },
+    blender: {
+      title: "3D Asset Creation Portfolio",
+      subtitle: "Blender & Substance Painter 에셋 제작",
+      images: ["assets/IMG_루체 전신1.jpg", "assets/IMG_카민 전신1.jpg", "assets/IMG_미르 전신1.jpg"]
+    },
+    clip: {
+      title: "Clip Studio Paint Portfolio",
+      subtitle: "디지털 원화 드로잉 & 컨셉 아트",
+      images: ["assets/IMG_클립스튜디오.jpg"]
+    }
+  };
+
+  const skillCards = document.querySelectorAll('.skill-card');
+  const skillViewer = document.getElementById('skill-detail-viewer');
+  const viewerTitle = document.getElementById('viewer-title');
+  const viewerSubtitle = document.getElementById('viewer-subtitle');
+  const viewerImagesContainer = document.getElementById('viewer-images-container');
+  const viewerCloseBtn = document.getElementById('viewer-close-btn');
+
+  const closeSkillViewer = () => {
+    if (skillViewer) {
+      skillViewer.classList.add('hidden');
+    }
+    skillCards.forEach(c => c.classList.remove('active'));
+  };
+
+  skillCards.forEach(card => {
+    const handleSkillClick = () => {
+      const skillName = card.getAttribute('data-skill');
+      const data = skillData[skillName];
+      if (!data || !skillViewer) return;
+
+      // Toggle close if clicking active card again
+      if (card.classList.contains('active')) {
+        closeSkillViewer();
+        return;
+      }
+
+      // Toggle active states on cards
+      skillCards.forEach(c => c.classList.remove('active'));
+      card.classList.add('active');
+
+      // Update texts
+      if (viewerTitle) viewerTitle.innerText = data.title;
+      if (viewerSubtitle) viewerSubtitle.innerText = data.subtitle;
+
+      // Clear and populate images
+      if (viewerImagesContainer) {
+        viewerImagesContainer.innerHTML = '';
+        
+        // Distinguish single / multi layouts for correct styling
+        if (data.images.length > 1) {
+          viewerImagesContainer.className = 'viewer-images-container multi-images';
+        } else {
+          viewerImagesContainer.className = 'viewer-images-container single-image';
+        }
+
+        data.images.forEach(imgUrl => {
+          const img = document.createElement('img');
+          img.src = imgUrl;
+          img.alt = `${data.title} Image`;
+          img.className = 'skill-detail-img';
+          img.loading = 'lazy';
+          viewerImagesContainer.appendChild(img);
+        });
+      }
+
+      // Show viewer
+      skillViewer.classList.remove('hidden');
+
+      // Smooth scroll into viewer area
+      setTimeout(() => {
+        skillViewer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }, 150);
+    };
+
+    card.addEventListener('click', handleSkillClick);
+    card.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        handleSkillClick();
+      }
+    });
+  });
+
+  if (viewerCloseBtn) {
+    viewerCloseBtn.addEventListener('click', closeSkillViewer);
+  }
 });

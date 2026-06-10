@@ -52,7 +52,7 @@
        ========================================================================== -->
   <section class="hero" id="home">
     <video class="hero-video-bg" autoplay loop muted playsinline poster="assets/웹페이지 테스트4.png">
-      <source src="assets/웹페이지 테스트1.mp4" type="video/mp4">
+      <source src="assets/Background.mov" type="video/quicktime">
     </video>
     <div class="hero-overlay"></div>
     <div class="hero-content">
@@ -113,7 +113,7 @@
       
       <div class="skills-grid">
         <!-- Skill 1: Unreal -->
-        <div class="skill-card">
+        <div class="skill-card" data-skill="unreal" tabindex="0" role="button" aria-label="Unreal Engine 기술 상세 보기">
           <div class="skill-card-inner">
             <div class="skill-icon-wrap">
               <img src="assets/Unreal.jpg" alt="Unreal Engine Logo" class="skill-logo">
@@ -127,7 +127,7 @@
         </div>
 
         <!-- Skill 2: Unity -->
-        <div class="skill-card">
+        <div class="skill-card" data-skill="unity" tabindex="0" role="button" aria-label="Unity 3D 기술 상세 보기">
           <div class="skill-card-inner">
             <div class="skill-icon-wrap">
               <img src="assets/Unity.jpg" alt="Unity Logo" class="skill-logo">
@@ -141,7 +141,7 @@
         </div>
 
         <!-- Skill 3: Blender & Substance -->
-        <div class="skill-card">
+        <div class="skill-card" data-skill="blender" tabindex="0" role="button" aria-label="Blender 기술 상세 보기">
           <div class="skill-card-inner">
             <div class="skill-icon-wrap multi-logos">
               <img src="assets/Blender.png" alt="Blender Logo" class="skill-logo">
@@ -156,7 +156,7 @@
         </div>
 
         <!-- Skill 4: Clip Studio -->
-        <div class="skill-card">
+        <div class="skill-card" data-skill="clip" tabindex="0" role="button" aria-label="Clip Studio 기술 상세 보기">
           <div class="skill-card-inner">
             <div class="skill-icon-wrap">
               <img src="assets/Clip.png" alt="Clip Studio Paint Logo" class="skill-logo">
@@ -166,6 +166,22 @@
             <p class="skill-card-desc">
               클립스튜디오 페인트 툴을 기반으로 버추얼 아바타 및 일러스트레이션 원화 드로잉, 캐릭터 컨셉 시각화 및 독창적인 2D 그래픽 텍스처 소스 제작 능력을 갖추고 있습니다.
             </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Skill Detail Viewer Panel (Glassmorphism design) -->
+      <div id="skill-detail-viewer" class="skill-detail-viewer hidden">
+        <button class="viewer-close-btn" id="viewer-close-btn" aria-label="상세보기 닫기">
+          <svg viewBox="0 0 24 24" width="20" height="20">
+            <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" fill="currentColor"/>
+          </svg>
+        </button>
+        <div class="viewer-content">
+          <h4 class="viewer-title" id="viewer-title">Skill Title</h4>
+          <p class="viewer-subtitle" id="viewer-subtitle">Skill Subtitle</p>
+          <div class="viewer-images-container" id="viewer-images-container">
+            <!-- Images will be injected here dynamically -->
           </div>
         </div>
       </div>
@@ -194,7 +210,7 @@
     <div class="gallery-grid" id="gallery">
       
       <!-- Video 1 (Virtual Production) -->
-      <article class="video-card" data-category="virtual-production" data-video-url="assets/웹페이지 테스트1.mp4">
+      <article class="video-card" data-category="virtual-production" data-video-url="assets/AI퍼포먼스캡쳐_김한얼_2024502006.mov">
         <div class="card-thumb-container">
           <span class="card-category-badge">Virtual Production</span>
           <img class="card-img" src="assets/V_01.png" alt="Virtual Avatar Project Thumbnail">
@@ -217,7 +233,7 @@
       <article class="video-card" data-category="virtual-production" data-video-url="assets/V02.mp4">
         <div class="card-thumb-container">
           <span class="card-category-badge">Virtual Production</span>
-          <img class="card-img" src="assets/V_01.png" alt="Virtual Stage Dance Thumbnail">
+          <img class="card-img" src="assets/IMG_VMV_02.png" alt="Virtual Stage Dance Thumbnail">
           <div class="card-overlay"></div>
           <div class="play-btn-circle" aria-label="Play Virtual Stage Dance">
             <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
@@ -237,7 +253,7 @@
       <article class="video-card" data-category="virtual-production" data-video-url="assets/V03.mp4">
         <div class="card-thumb-container">
           <span class="card-category-badge">Virtual Production</span>
-          <img class="card-img" src="assets/V_01.png" alt="Face & Motion Capture Thumbnail">
+          <img class="card-img" src="assets/IMG_VMV_03.png" alt="Face & Motion Capture Thumbnail">
           <div class="card-overlay"></div>
           <div class="play-btn-circle" aria-label="Play Face & Motion Capture">
             <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
@@ -257,7 +273,7 @@
       <article class="video-card" data-category="virtual-production" data-video-url="assets/V04.mp4">
         <div class="card-thumb-container">
           <span class="card-category-badge">Virtual Production</span>
-          <img class="card-img" src="assets/V_01.png" alt="Avatar Character Design Thumbnail">
+          <img class="card-img" src="assets/IMG_VMV_01.png" alt="Avatar Character Design Thumbnail">
           <div class="card-overlay"></div>
           <div class="play-btn-circle" aria-label="Play Avatar Character Design">
             <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
@@ -277,7 +293,7 @@
       <article class="video-card" data-category="vr-dev" data-video-url="assets/VR_01.mp4">
         <div class="card-thumb-container">
           <span class="card-category-badge">VR Dev</span>
-          <img class="card-img" src="assets/웹페이지 테스트4.png" alt="VR Interaction Physics Thumbnail">
+          <img class="card-img" src="assets/IMG_VR_01.png" alt="VR Interaction Physics Thumbnail">
           <div class="card-overlay"></div>
           <div class="play-btn-circle" aria-label="Play VR Interaction Physics">
             <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
@@ -297,7 +313,7 @@
       <article class="video-card" data-category="vr-dev" data-video-url="assets/VR_02.mp4">
         <div class="card-thumb-container">
           <span class="card-category-badge">VR Dev</span>
-          <img class="card-img" src="assets/웹페이지 테스트4.png" alt="VR Space Flight Simulator Thumbnail">
+          <img class="card-img" src="assets/IMG_VR_02.png" alt="VR Space Flight Simulator Thumbnail">
           <div class="card-overlay"></div>
           <div class="play-btn-circle" aria-label="Play VR Space Flight Simulator">
             <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
@@ -317,7 +333,7 @@
       <article class="video-card" data-category="ai" data-video-url="assets/AI.mp4">
         <div class="card-thumb-container">
           <span class="card-category-badge">AI Content</span>
-          <img class="card-img" src="assets/웹페이지 테스트4.png" alt="AI Generative Video Art Thumbnail">
+          <img class="card-img" src="assets/IMG_AI.jpg" alt="AI Generative Video Art Thumbnail">
           <div class="card-overlay"></div>
           <div class="play-btn-circle" aria-label="Play AI Generative Video Art">
             <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
@@ -329,7 +345,7 @@
             <span>2026</span>
           </div>
           <h3 class="card-title">AI 생성형 시네마틱 단편 [네오 서울 2099]</h3>
-          <p class="card-desc">디퓨전 모델 기반의 이미지/비디오 생성 파이프라인과 프롬프트 엔지니어링 설계를 기반으로 제작한 고화질 공상과학 SF 영상물입니다. 일관성 유지(ControlNet) 기법과 딥러닝 연산을 활용한 프레임 보간 처리를 결합하여, 카메라가 촬영하기 힘든 미래 도시의 기계 디테일과 사이버네틱 아키텍처를 시네마틱한 질감으로 구성했습니다.</p>
+          <p class="card-desc">디퓨전 모델 기반의 이미지/비디오 생성 파이프라인 and 프롬프트 엔지니어링 설계를 기반으로 제작한 고화질 공상과학 SF 영상물입니다. 일관성 유지(ControlNet) 기법과 딥러닝 연산을 활용한 프레임 보간 처리를 결합하여, 카메라가 촬영하기 힘든 미래 도시의 기계 디테일과 사이버네틱 아키텍처를 시네마틱한 질감으로 구성했습니다.</p>
         </div>
       </article>
 
@@ -337,7 +353,7 @@
       <article class="video-card" data-category="3d-animation" data-video-url="assets/3D Anim.mp4">
         <div class="card-thumb-container">
           <span class="card-category-badge">3D Animation</span>
-          <img class="card-img" src="assets/웹페이지 테스트4.png" alt="3D Motion Animation Showcase Thumbnail">
+          <img class="card-img" src="assets/IMG_3D_Anim.jpg" alt="3D Motion Animation Showcase Thumbnail">
           <div class="card-overlay"></div>
           <div class="play-btn-circle" aria-label="Play 3D Motion Animation Showcase">
             <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
@@ -357,7 +373,7 @@
       <article class="video-card" data-category="arduino" data-video-url="assets/Arduino.mov">
         <div class="card-thumb-container">
           <span class="card-category-badge">Arduino</span>
-          <img class="card-img" src="assets/웹페이지 테스트4.png" alt="Arduino Physical Gaming Console Thumbnail">
+          <img class="card-img" src="assets/IMG_Arduino.jpg" alt="Arduino Physical Gaming Console Thumbnail">
           <div class="card-overlay"></div>
           <div class="play-btn-circle" aria-label="Play Arduino Physical Gaming Console">
             <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>

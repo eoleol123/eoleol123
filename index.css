@@ -945,6 +945,14 @@ header.scrolled {
   border-radius: 12px;
   transition: var(--transition-smooth);
   height: 100%;
+  cursor: pointer;
+}
+
+.skill-card.active {
+  border-color: var(--color-primary);
+  background: rgba(255, 204, 0, 0.04);
+  box-shadow: 0 0 25px rgba(255, 204, 0, 0.15);
+  transform: translateY(-5px);
 }
 
 .skill-card-inner {
@@ -1147,3 +1155,144 @@ footer {
     padding: 30px;
   }
 }
+
+/* ==========================================================================
+   Skill Detail Viewer (Interactive Accordion / Panel)
+   ========================================================================== */
+.skill-detail-viewer {
+  margin-top: 40px;
+  padding: 45px 40px;
+  background: rgba(15, 15, 15, 0.75);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  position: relative;
+  transition: all 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
+  opacity: 1;
+  max-height: 2000px;
+  overflow: hidden;
+  box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.02), 0 20px 40px rgba(0, 0, 0, 0.6);
+}
+
+.skill-detail-viewer.hidden {
+  max-height: 0;
+  opacity: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  margin-top: 0;
+  border-color: transparent;
+  pointer-events: none;
+  box-shadow: none;
+}
+
+.viewer-close-btn {
+  position: absolute;
+  top: 25px;
+  right: 25px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--color-text-gray);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--transition-smooth);
+}
+
+.viewer-close-btn:hover {
+  color: var(--color-primary);
+  background: rgba(255, 204, 0, 0.1);
+  border-color: var(--color-primary);
+  transform: rotate(90deg) scale(1.1);
+  box-shadow: 0 0 15px var(--color-primary-glow);
+}
+
+.viewer-content {
+  text-align: center;
+}
+
+.viewer-title {
+  font-family: var(--font-title);
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: var(--color-text-white);
+  margin-bottom: 5px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.viewer-subtitle {
+  color: var(--color-primary);
+  font-size: 0.9rem;
+  font-weight: 700;
+  margin-bottom: 35px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+
+.viewer-images-container {
+  display: flex;
+  gap: 25px;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.skill-detail-img {
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
+  transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), border-color 0.3s ease;
+  max-width: 100%;
+  height: auto;
+}
+
+.skill-detail-img:hover {
+  transform: scale(1.025);
+  border-color: var(--color-primary);
+  box-shadow: 0 15px 35px rgba(255, 204, 0, 0.12);
+}
+
+/* Blender 3장 이미지 규격 배치용 (동일 규격, 일정한 간격) */
+.viewer-images-container.multi-images .skill-detail-img {
+  flex: 1;
+  min-width: 260px;
+  max-width: 31%;
+  aspect-ratio: 2 / 3;
+  object-fit: cover;
+}
+
+/* 단일 이미지 배치용 */
+.viewer-images-container.single-image .skill-detail-img {
+  max-width: 650px;
+  max-height: 520px;
+  object-fit: contain;
+}
+
+/* 반응형 미디어 쿼리 */
+@media (max-width: 992px) {
+  .viewer-images-container.multi-images .skill-detail-img {
+    max-width: 46%;
+  }
+}
+
+@media (max-width: 768px) {
+  .skill-detail-viewer {
+    padding: 30px 20px;
+  }
+  .viewer-images-container.multi-images .skill-detail-img {
+    max-width: 100%;
+    flex: none;
+    aspect-ratio: auto;
+    height: 400px;
+  }
+  .viewer-images-container.single-image .skill-detail-img {
+    max-width: 100%;
+  }
+}
+
