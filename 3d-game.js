@@ -42,6 +42,8 @@
   let bombardmentActive = null;
   let blackHoleActive = null;
   let dragonAttackTimer = 0;
+  // Breath charge sequence: { mesh, phase:'charge'|'fire', chargeTimer, lockPos, fireTimer, fireDuration, currentDir }
+  let dragonBreath = null;
 
   // Flight variables for gradual build-up and slow down
   let currentSpeed = 0;
@@ -1424,11 +1426,11 @@
     // Build static Western dragon
     dragon = buildWesternDragon();
 
-    // Place far behind ring 20 (index 19), facing the player (forward = -Z)
+    // Place far behind ring 20 (index 19), forward along player's travel direction (-Z)
     const ring20 = rings[19];
-    const dragonZ = ring20 ? ring20.position.z + 600 : -3000;
+    const dragonZ = ring20 ? ring20.position.z - 600 : -2000;
     dragon.position.set(0, 40, dragonZ);
-    dragon.rotation.y = Math.PI; // face toward -Z (toward player approach)
+    dragon.rotation.y = 0; // default forward = -Z, faces player approaching from +Z side
 
     scene.add(dragon);
 
@@ -1468,44 +1470,106 @@
       triggerDragonAttack(roll);
     }
 
-    // 1) Update active dragon laser beam — tracks & rotates toward player each frame
-    if (activeDragonLaser) {
-      activeDragonLaser.timer -= deltaTime;
-
-      // Mouth is at headGroup world position + forward offset
-      const headGroup = dragon.userData.headGroup;
+    // ── BREATH ATTACK STATE MACHINE ──
+    if (dragonBreath) {
+      const hg = dragon.userData.headGroup;
       const headWorldPos = new THREE.Vector3();
-      headGroup.getWorldPosition(headWorldPos);
-      // Push from head centre toward snout (~60 units in local -Z → world)
-      const fwd = new THREE.Vector3(0, 0, -1).applyQuaternion(headGroup.getWorldQuaternion(new THREE.Quaternion()));
+      hg.getWorldPosition(headWorldPos);
+      const fwd = new THREE.Vector3(0, 0, -1).applyQuaternion(hg.getWorldQuaternion(new THREE.Quaternion()));
       const mouthPos = headWorldPos.clone().addScaledVector(fwd, 60);
 
-      // Beam direction toward player
-      const beamDir = new THREE.Vector3().subVectors(player.position, mouthPos).normalize();
-      const zAxis = new THREE.Vector3(0, 0, 1);
-      const beamQuat = new THREE.Quaternion().setFromUnitVectors(zAxis, beamDir);
+      if (dragonBreath.phase === 'charge') {
+        // ─ Phase 1: Energy charges at mouth ─
+        dragonBreath.chargeTimer -= deltaTime;
+        const t = 1.0 - Math.max(0, dragonBreath.chargeTimer) / dragonBreath.chargeDuration;
+        const s = 2 + t * 14;   // sphere grows 2 → 16 units
+        dragonBreath.chargeMesh.position.copy(mouthPos);
+        dragonBreath.chargeMesh.scale.set(s, s, s);
+        // Pulse colour more intensely as charge nears
+        const pulse = 0.4 + t * 0.6;
+        dragonBreath.chargeMesh.material.opacity = pulse;
 
-      activeDragonLaser.mesh.position.copy(mouthPos);
-      activeDragonLaser.mesh.quaternion.copy(beamQuat);
+        // Lock-on 1 second before firing
+        const lockThreshold = 1.0;
+        if (dragonBreath.chargeTimer <= lockThreshold && !dragonBreath.locked) {
+          dragonBreath.locked = true;
+          dragonBreath.lockPos = player.position.clone();
+          showWarningBanner("BOSS ATTACK: DRAGON FIRE BREATH!");
+        }
 
-      // Pulse glow
-      const pulse = 0.55 + 0.45 * Math.sin(clock.getElapsedTime() * 28);
-      activeDragonLaser.mesh.material.opacity = pulse;
+        // Charge complete → transition to fire
+        if (dragonBreath.chargeTimer <= 0) {
+          scene.remove(dragonBreath.chargeMesh);
+          dragonBreath.chargeMesh.geometry.dispose();
+          dragonBreath.chargeMesh.material.dispose();
 
-      // Damage check
-      const toPlayer = new THREE.Vector3().subVectors(player.position, mouthPos);
-      const projLen = toPlayer.dot(beamDir);
-      if (projLen > 0 && projLen < 600) {
-        const perp = toPlayer.clone().addScaledVector(beamDir, -projLen);
-        if (perp.length() < 10.0) takeDamage(3);
+          // Build the beam mesh
+          const beamGeo = new THREE.CylinderGeometry(5.0, 5.0, 700, 12);
+          beamGeo.rotateX(Math.PI / 2);
+          const beamMat = new THREE.MeshBasicMaterial({ color: 0xff4400, transparent: true, opacity: 0.88 });
+          const beamMesh = new THREE.Mesh(beamGeo, beamMat);
+
+          // Initial direction: locked player position
+          const lockDir = new THREE.Vector3().subVectors(dragonBreath.lockPos, mouthPos).normalize();
+          const zAxis = new THREE.Vector3(0, 0, 1);
+          beamMesh.quaternion.setFromUnitVectors(zAxis, lockDir);
+          beamMesh.position.copy(mouthPos);
+          scene.add(beamMesh);
+          spawnExplosion(mouthPos, 0xff4400, 20, 1.0);
+
+          // Random fire duration 2.0 – 4.5 s
+          const fireDur = 2.0 + Math.random() * 2.5;
+          dragonBreath = {
+            phase: 'fire',
+            beamMesh: beamMesh,
+            fireTimer: fireDur,
+            currentDir: lockDir.clone()
+          };
+        }
+
+      } else if (dragonBreath.phase === 'fire') {
+        // ─ Phase 2: Beam tracks player gradually ─
+        dragonBreath.fireTimer -= deltaTime;
+
+        // Compute fresh mouth pos
+        const bm = dragonBreath.beamMesh;
+        bm.position.copy(mouthPos);
+
+        // Gradually rotate currentDir toward actual player direction
+        const targetDir = new THREE.Vector3().subVectors(player.position, mouthPos).normalize();
+        dragonBreath.currentDir.lerp(targetDir, 0.6 * deltaTime).normalize();
+
+        const zAxis = new THREE.Vector3(0, 0, 1);
+        bm.quaternion.setFromUnitVectors(zAxis, dragonBreath.currentDir);
+
+        // Pulse opacity
+        const pulse = 0.65 + 0.35 * Math.sin(clock.getElapsedTime() * 22);
+        bm.material.opacity = pulse;
+
+        // Damage: perpendicular distance from beam axis
+        const toPlayer = new THREE.Vector3().subVectors(player.position, mouthPos);
+        const proj = toPlayer.dot(dragonBreath.currentDir);
+        if (proj > 0 && proj < 700) {
+          const perp = toPlayer.clone().addScaledVector(dragonBreath.currentDir, -proj);
+          if (perp.length() < 8.0) takeDamage(2);
+        }
+
+        // Beam ends
+        if (dragonBreath.fireTimer <= 0) {
+          scene.remove(bm);
+          bm.geometry.dispose();
+          bm.material.dispose();
+          dragonBreath = null;
+        }
       }
+    }
 
-      if (activeDragonLaser.timer <= 0) {
-        scene.remove(activeDragonLaser.mesh);
-        activeDragonLaser.mesh.geometry.dispose();
-        activeDragonLaser.mesh.material.dispose();
-        activeDragonLaser = null;
-      }
+    // Keep old activeDragonLaser clean-up (now unused but safe)
+    if (activeDragonLaser) {
+      scene.remove(activeDragonLaser.mesh);
+      activeDragonLaser.mesh.geometry.dispose();
+      activeDragonLaser.mesh.material.dispose();
+      activeDragonLaser = null;
     }
 
     // 2) Warning bombardment
@@ -1555,30 +1619,37 @@
 
   function triggerDragonAttack(patternId) {
     if (patternId === 1) {
-      // TRACKING LASER BEAM from dragon mouth
-      if (activeDragonLaser) return;
+      // START BREATH CHARGE SEQUENCE (skip if already charging/firing)
+      if (dragonBreath) return;
 
-      const beamGeo = new THREE.CylinderGeometry(5.0, 5.0, 600, 16);
-      beamGeo.rotateX(Math.PI / 2);
-      const beamMat = new THREE.MeshBasicMaterial({ color: 0xff4400, transparent: true, opacity: 0.88 });
-      const beamMesh = new THREE.Mesh(beamGeo, beamMat);
+      // Glowing energy sphere at mouth (will grow during charge)
+      const chargeGeo = new THREE.SphereGeometry(1, 14, 10);
+      const chargeMat = new THREE.MeshBasicMaterial({
+        color: 0xff6600,
+        transparent: true,
+        opacity: 0.0
+      });
+      const chargeMesh = new THREE.Mesh(chargeGeo, chargeMat);
 
-      // Mouth position (head world pos + forward)
-      const headGroup = dragon.userData.headGroup;
-      const headWorldPos = new THREE.Vector3();
-      headGroup.getWorldPosition(headWorldPos);
-      const fwd = new THREE.Vector3(0, 0, -1).applyQuaternion(headGroup.getWorldQuaternion(new THREE.Quaternion()));
-      const mouthPos = headWorldPos.clone().addScaledVector(fwd, 60);
-      beamMesh.position.copy(mouthPos);
+      const hg = dragon.userData.headGroup;
+      const hwp = new THREE.Vector3();
+      hg.getWorldPosition(hwp);
+      const fwd = new THREE.Vector3(0, 0, -1).applyQuaternion(hg.getWorldQuaternion(new THREE.Quaternion()));
+      chargeMesh.position.copy(hwp.clone().addScaledVector(fwd, 60));
+      scene.add(chargeMesh);
 
-      const beamDir = new THREE.Vector3().subVectors(player.position, mouthPos).normalize();
-      const zAxis = new THREE.Vector3(0, 0, 1);
-      beamMesh.quaternion.setFromUnitVectors(zAxis, beamDir);
+      // Charge duration: 2.0 – 3.0 s (lock fires 1 s before end)
+      const chargeDur = 2.0 + Math.random() * 1.0;
+      dragonBreath = {
+        phase: 'charge',
+        chargeMesh: chargeMesh,
+        chargeDuration: chargeDur,
+        chargeTimer: chargeDur,
+        locked: false,
+        lockPos: new THREE.Vector3()
+      };
+      showWarningBanner("WARNING: DRAGON CHARGING BREATH!");
 
-      scene.add(beamMesh);
-      activeDragonLaser = { mesh: beamMesh, timer: 3.5 };
-      showWarningBanner("BOSS ATTACK: DRAGON FIRE BREATH!");
-      spawnExplosion(mouthPos, 0xff4400, 25, 1.2);
 
     } else if (patternId === 2) {
       // Orbital warning bombardment
@@ -1632,6 +1703,12 @@
     dragonFireballs.forEach(f => scene.remove(f));
     dragonFireballs = [];
 
+    // Clean up breath attack
+    if (dragonBreath) {
+      if (dragonBreath.chargeMesh) { scene.remove(dragonBreath.chargeMesh); dragonBreath.chargeMesh.geometry.dispose(); dragonBreath.chargeMesh.material.dispose(); }
+      if (dragonBreath.beamMesh)   { scene.remove(dragonBreath.beamMesh);   dragonBreath.beamMesh.geometry.dispose();   dragonBreath.beamMesh.material.dispose(); }
+      dragonBreath = null;
+    }
     if (activeDragonLaser) {
       scene.remove(activeDragonLaser.mesh);
       activeDragonLaser.mesh.geometry.dispose();
