@@ -50,6 +50,7 @@
   let shootCooldown = 0;
   let playerLasers = [];
   let dragonHP = 1000;
+  let combatMode = false;
   const maxDragonHP = 1000;
 
   // Flight variables for gradual build-up and slow down
