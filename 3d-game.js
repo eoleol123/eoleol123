@@ -1104,12 +1104,21 @@
       side: THREE.DoubleSide
     });
 
-    // ── TORSO ──
-    const torsoGeo = new THREE.CapsuleGeometry(28, 70, 12, 20);
-    torsoGeo.rotateZ(Math.PI / 2);
-    const torso = new THREE.Mesh(torsoGeo, scaleDragonMat(0.6));
-    torso.position.set(0, 0, 0);
-    root.add(torso);
+    // ── TORSO (Cylinder + sphere caps, r128 compatible) ──
+    const torsoGroup = new THREE.Group();
+    const torsoCyl = new THREE.Mesh(
+      new THREE.CylinderGeometry(28, 28, 70, 16),
+      scaleDragonMat(0.6)
+    );
+    torsoCyl.rotation.z = Math.PI / 2;
+    torsoGroup.add(torsoCyl);
+    const torsoCapL = new THREE.Mesh(new THREE.SphereGeometry(28, 14, 10), scaleDragonMat(0.6));
+    torsoCapL.position.set(-35, 0, 0);
+    torsoGroup.add(torsoCapL);
+    const torsoCapR = torsoCapL.clone();
+    torsoCapR.position.set(35, 0, 0);
+    torsoGroup.add(torsoCapR);
+    root.add(torsoGroup);
 
     // ── CHEST ──
     const chestGeo = new THREE.SphereGeometry(32, 14, 12);
@@ -1280,17 +1289,33 @@
     const buildFrontLeg = (side) => {
       const lg = new THREE.Group();
 
-      const upperGeo = new THREE.CapsuleGeometry(9, 40, 8, 10);
-      const upper = new THREE.Mesh(upperGeo, scaleDragonMat(0.55));
-      upper.rotation.z = side * 0.5;
-      upper.position.set(side * 34, -30, -30);
-      lg.add(upper);
+      // Upper leg (cylinder + sphere caps)
+      const upperGroup = new THREE.Group();
+      const upCyl = new THREE.Mesh(new THREE.CylinderGeometry(9, 9, 40, 10), scaleDragonMat(0.55));
+      upperGroup.add(upCyl);
+      const upCapT = new THREE.Mesh(new THREE.SphereGeometry(9, 8, 6), scaleDragonMat(0.55));
+      upCapT.position.y = 20;
+      upperGroup.add(upCapT);
+      const upCapB = upCapT.clone();
+      upCapB.position.y = -20;
+      upperGroup.add(upCapB);
+      upperGroup.rotation.z = side * 0.5;
+      upperGroup.position.set(side * 34, -30, -30);
+      lg.add(upperGroup);
 
-      const lowerGeo = new THREE.CapsuleGeometry(7, 38, 8, 10);
-      const lower = new THREE.Mesh(lowerGeo, scaleDragonMat(0.5));
-      lower.position.set(side * 44, -58, -35);
-      lower.rotation.z = side * 0.6;
-      lg.add(lower);
+      // Lower leg
+      const lowerGroup = new THREE.Group();
+      const loCyl = new THREE.Mesh(new THREE.CylinderGeometry(7, 7, 38, 10), scaleDragonMat(0.5));
+      lowerGroup.add(loCyl);
+      const loCapT = new THREE.Mesh(new THREE.SphereGeometry(7, 8, 6), scaleDragonMat(0.5));
+      loCapT.position.y = 19;
+      lowerGroup.add(loCapT);
+      const loCapB = loCapT.clone();
+      loCapB.position.y = -19;
+      lowerGroup.add(loCapB);
+      lowerGroup.position.set(side * 44, -58, -35);
+      lowerGroup.rotation.z = side * 0.6;
+      lg.add(lowerGroup);
 
       const footGeo = new THREE.SphereGeometry(10, 10, 8);
       footGeo.scale(1.2, 0.5, 1.5);
@@ -1315,17 +1340,33 @@
     const buildRearLeg = (side) => {
       const lg = new THREE.Group();
 
-      const upperGeo = new THREE.CapsuleGeometry(11, 45, 8, 10);
-      const upper = new THREE.Mesh(upperGeo, scaleDragonMat(0.55));
-      upper.position.set(side * 36, -28, 30);
-      upper.rotation.z = side * 0.45;
-      lg.add(upper);
+      // Upper rear leg
+      const upperGroup = new THREE.Group();
+      const upCyl = new THREE.Mesh(new THREE.CylinderGeometry(11, 11, 45, 10), scaleDragonMat(0.55));
+      upperGroup.add(upCyl);
+      const upCapT = new THREE.Mesh(new THREE.SphereGeometry(11, 8, 6), scaleDragonMat(0.55));
+      upCapT.position.y = 22.5;
+      upperGroup.add(upCapT);
+      const upCapB = upCapT.clone();
+      upCapB.position.y = -22.5;
+      upperGroup.add(upCapB);
+      upperGroup.position.set(side * 36, -28, 30);
+      upperGroup.rotation.z = side * 0.45;
+      lg.add(upperGroup);
 
-      const lowerGeo = new THREE.CapsuleGeometry(9, 40, 8, 10);
-      const lower = new THREE.Mesh(lowerGeo, scaleDragonMat(0.5));
-      lower.position.set(side * 46, -60, 40);
-      lower.rotation.z = side * 0.5;
-      lg.add(lower);
+      // Lower rear leg
+      const lowerGroup = new THREE.Group();
+      const loCyl = new THREE.Mesh(new THREE.CylinderGeometry(9, 9, 40, 10), scaleDragonMat(0.5));
+      lowerGroup.add(loCyl);
+      const loCapT = new THREE.Mesh(new THREE.SphereGeometry(9, 8, 6), scaleDragonMat(0.5));
+      loCapT.position.y = 20;
+      lowerGroup.add(loCapT);
+      const loCapB = loCapT.clone();
+      loCapB.position.y = -20;
+      lowerGroup.add(loCapB);
+      lowerGroup.position.set(side * 46, -60, 40);
+      lowerGroup.rotation.z = side * 0.5;
+      lg.add(lowerGroup);
 
       const footGeo = new THREE.SphereGeometry(12, 10, 8);
       footGeo.scale(1.2, 0.5, 1.5);
@@ -1345,17 +1386,18 @@
     buildRearLeg(1);
     buildRearLeg(-1);
 
-    // ── TAIL (7 tapered segments) ──
+    // ── TAIL (7 tapered cylinder segments, r128 compatible) ──
     let tailZ = 60;
     let tailR = 22;
     for (let t = 0; t < 7; t++) {
-      const tGeo = new THREE.CapsuleGeometry(tailR, 30, 8, 10);
+      const tailR2 = Math.max(4, tailR - 2.6);
+      const tGeo = new THREE.CylinderGeometry(tailR2, tailR, 30, 10);
       tGeo.rotateX(Math.PI / 2);
       const tail = new THREE.Mesh(tGeo, scaleDragonMat(0.5 - t * 0.05));
       tail.position.set(0, -8 + t * -4, tailZ + t * 28);
       tail.rotation.y = Math.sin(t * 0.6) * 0.25;
       root.add(tail);
-      tailR = Math.max(4, tailR - 2.6);
+      tailR = tailR2;
     }
 
     // Tail spike
