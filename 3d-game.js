@@ -27,11 +27,9 @@
   let meteors = [];
   let meteorSpawnTimer = 0;
 
-  // Stage 2 (Pirate Ship) state
-  let pirateShip = null;
+  // Stage 2 (Pirate Ship) state - Fleet of 4
+  let pirateShips = [];
   let pirateLasers = [];
-  let pirateFireTimer = 0;
-  let pirateLockOnTarget = new THREE.Vector3();
 
   // Stage 3 (Timed Chase) state
   let stage3Timer = 12.0;
@@ -40,6 +38,7 @@
   let dragon = null;
   let dragonSegments = [];
   let dragonFireballs = [];
+  let activeDragonLaser = null;
   let bombardmentActive = null;
   let blackHoleActive = null;
   let dragonAttackTimer = 0;
@@ -88,32 +87,32 @@
   // Staged ring coordinates
   const ringCoords = [
     // Stage 1 (1 to 5): Forward trail
-    new THREE.Vector3(0, 10, -50),
-    new THREE.Vector3(15, 18, -100),
-    new THREE.Vector3(-20, 12, -150),
-    new THREE.Vector3(-5, 22, -200),
-    new THREE.Vector3(25, 15, -250),
+    new THREE.Vector3(0, 15, -70),
+    new THREE.Vector3(15, 20, -140),
+    new THREE.Vector3(-15, 12, -210),
+    new THREE.Vector3(10, 25, -280),
+    new THREE.Vector3(-10, 18, -350),
     
-    // Stage 2 (6 to 10): Turning and climbing
-    new THREE.Vector3(0, 32, -300),
-    new THREE.Vector3(-35, 42, -320),
-    new THREE.Vector3(-55, 28, -265),
-    new THREE.Vector3(-25, 18, -215),
-    new THREE.Vector3(15, 28, -195),
+    // Stage 2 (6 to 10): Turning and climbing (Forward progression)
+    new THREE.Vector3(0, 22, -420),
+    new THREE.Vector3(20, 15, -490),
+    new THREE.Vector3(-20, 28, -560),
+    new THREE.Vector3(15, 18, -630),
+    new THREE.Vector3(-15, 25, -700),
     
-    // Stage 3 (11 to 15): Timed rings (relocate on timeout)
-    new THREE.Vector3(45, 22, -145),
-    new THREE.Vector3(55, 38, -95),
-    new THREE.Vector3(35, 18, -45),
-    new THREE.Vector3(5, 32, 5),
-    new THREE.Vector3(-35, 22, 55),
+    // Stage 3 (11 to 15): Timed rings (Forward progression)
+    new THREE.Vector3(0, 20, -770),
+    new THREE.Vector3(25, 25, -840),
+    new THREE.Vector3(-25, 15, -910),
+    new THREE.Vector3(15, 30, -980),
+    new THREE.Vector3(-15, 22, -1050),
     
-    // Stage 4 (16 to 20): Orbiting the boss zone
-    new THREE.Vector3(-55, 38, 125),
-    new THREE.Vector3(-25, 48, 185),
-    new THREE.Vector3(25, 28, 205),
-    new THREE.Vector3(55, 42, 145),
-    new THREE.Vector3(0, 32, 95)
+    // Stage 4 (16 to 20): Orbiting the boss zone (Forward progression)
+    new THREE.Vector3(0, 25, -1120),
+    new THREE.Vector3(30, 20, -1190),
+    new THREE.Vector3(-30, 30, -1260),
+    new THREE.Vector3(20, 15, -1330),
+    new THREE.Vector3(0, 25, -1400)
   ];
 
   if (!openGameBtn || !gameContainer) {
@@ -168,25 +167,29 @@
     controls = new THREE.OrbitControls(camera, renderer.domElement);
     controls.enabled = false;   // Turn off OrbitControls to use custom follow camera
 
-    // Ambient light (Dark indigo tone)
-    const ambientLight = new THREE.AmbientLight(0x090a16, 0.5);
+    // Ambient light (Bright indigo tone)
+    const ambientLight = new THREE.AmbientLight(0x3a3f58, 1.2);
     scene.add(ambientLight);
 
-    // Directional light (Cyber Space Moon)
-    const dirLight = new THREE.DirectionalLight(0x50558a, 0.8);
-    dirLight.position.set(40, 60, 20);
+    // Directional light (Cyber Space Moon - white and bright)
+    const dirLight = new THREE.DirectionalLight(0xffffff, 2.0);
+    dirLight.position.set(100, 150, 50);
     scene.add(dirLight);
 
+    // Hemisphere light (Space ambient scattering)
+    const hemiLight = new THREE.HemisphereLight(0xffffff, 0x111122, 1.0);
+    scene.add(hemiLight);
+
     // Cosmic colored point lights
-    const pinkLight = new THREE.PointLight(0xff007f, 3.0, 80);
+    const pinkLight = new THREE.PointLight(0xff007f, 3.5, 120);
     pinkLight.position.set(-30, 20, -100);
     scene.add(pinkLight);
 
-    const cyanLight = new THREE.PointLight(0x00f0ff, 3.0, 80);
+    const cyanLight = new THREE.PointLight(0x00f0ff, 3.5, 120);
     cyanLight.position.set(30, 10, -200);
     scene.add(cyanLight);
 
-    const greenLight = new THREE.PointLight(0x00ff66, 3.0, 80);
+    const greenLight = new THREE.PointLight(0x00ff66, 3.5, 120);
     greenLight.position.set(0, 40, 120);
     scene.add(greenLight);
 
@@ -251,7 +254,7 @@
     const bodyGeo = new THREE.ConeGeometry(0.5, 2.6, 8);
     bodyGeo.rotateX(Math.PI / 2); // align along Z-axis
     const bodyMat = new THREE.MeshStandardMaterial({
-      color: 0x1a2130,
+      color: 0x5a6982, // Light steel/slate blue
       roughness: 0.25,
       metalness: 0.85
     });
@@ -289,7 +292,7 @@
     wingGeo.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
     wingGeo.computeVertexNormals();
     const wingMat = new THREE.MeshStandardMaterial({
-      color: 0x111320,
+      color: 0x2e3b4e, // Lighter wing color
       roughness: 0.3,
       metalness: 0.8,
       side: THREE.DoubleSide
@@ -361,8 +364,8 @@
     player = shipGroup;
     scene.add(player);
 
-    // Starting values
-    player.position.set(0, 0.1, 0); // rest on floor
+    // Starting values (Takeoff/ground constraints completely removed)
+    player.position.set(0, 15, 0); 
     player.rotation.set(0, Math.PI, 0); // face forward (Z-)
   }
 
@@ -393,7 +396,7 @@
     const texture = new THREE.CanvasTexture(canvas);
     const material = new THREE.SpriteMaterial({ map: texture, transparent: true });
     const sprite = new THREE.Sprite(material);
-    sprite.scale.set(3.8, 3.8, 1);
+    sprite.scale.set(9.5, 9.5, 1);
     return sprite;
   }
 
@@ -403,7 +406,8 @@
     });
     rings = [];
 
-    const ringGeo = new THREE.TorusGeometry(3.2, 0.28, 8, 24);
+    // 2.5x larger ring geometry
+    const ringGeo = new THREE.TorusGeometry(8.0, 0.7, 8, 24);
 
     for (let i = 0; i < ringCoords.length; i++) {
       const ringGroup = new THREE.Group();
@@ -419,12 +423,11 @@
       ringGroup.add(ringMesh);
       
       const label = createRingLabel(i + 1);
-      label.position.y = 4.8;
+      label.position.y = 12.0;
       ringGroup.add(label);
       
       ringGroup.position.copy(ringCoords[i]);
-      scene.add(ringGroup);
-      
+      // Initially hidden – visibility managed by updateRingsVisibility()
       rings.push({
         mesh: ringGroup,
         material: ringMat,
@@ -433,6 +436,22 @@
         passed: false
       });
     }
+    updateRingsVisibility();
+  }
+
+  // Show only rings belonging to the current gameStage; hide all others
+  function updateRingsVisibility() {
+    const stageStart = (gameStage - 1) * 5; // e.g. stage 1 → 0, stage 2 → 5
+    const stageEnd   = stageStart + 5;      // exclusive upper bound
+    rings.forEach((ring, idx) => {
+      if (idx >= stageStart && idx < stageEnd) {
+        if (!scene.getObjectById(ring.mesh.id)) {
+          scene.add(ring.mesh);
+        }
+      } else {
+        scene.remove(ring.mesh);
+      }
+    });
   }
 
   function createNavigationArrow() {
@@ -657,23 +676,23 @@
     isGameOver = false;
     isMissionClear = false;
 
-    // Reset flight variables
+    // Reset flight variables (start mid-air in space)
     currentSpeed = 0;
     yaw = Math.PI;
     pitch = 0;
     roll = 0;
-    hoverHeight = 0.1;
+    hoverHeight = 15;
     hoverVelocity = 0;
-    targetHoverHeight = 0.1;
+    targetHoverHeight = 15;
 
     // Hide screen overlays
     document.getElementById('game-over-screen').classList.add('hidden');
     document.getElementById('game-clear-screen').classList.add('hidden');
     document.getElementById('hud-timer-box').classList.add('hidden');
 
-    // Reset player position
+    // Reset player position (mid-air in space)
     if (player) {
-      player.position.set(0, 0.1, 0);
+      player.position.set(0, 15, 0);
       player.rotation.set(0, Math.PI, 0);
     }
 
@@ -694,13 +713,11 @@
     meteors = [];
     meteorSpawnTimer = 0;
 
-    if (pirateShip) {
-      scene.remove(pirateShip);
-      pirateShip = null;
-    }
+    // Clear pirate fleet
+    pirateShips.forEach(ps => scene.remove(ps.group));
+    pirateShips = [];
     pirateLasers.forEach(l => scene.remove(l));
     pirateLasers = [];
-    pirateFireTimer = 0;
 
     despawnDragon();
 
@@ -722,9 +739,9 @@
       activeRing.material.emissiveIntensity = 1.6 + Math.sin(clock.getElapsedTime() * 12) * 0.6;
       activeRing.mesh.rotation.y += 0.8 * deltaTime;
 
-      // Distance check for collision
+      // Distance check for collision (2.5x ring size)
       const dist = player.position.distanceTo(activeRing.position);
-      if (dist < 4.2) {
+      if (dist < 10.5) {
         passRing(activeRing);
       }
     }
@@ -758,9 +775,6 @@
         (Math.random() - 0.5) * 30,
         (Math.random() - 0.5) * 20
       ));
-
-    // Ensure it doesn't go below floor level
-    if (newPos.y < 5.0) newPos.y = 5.0;
 
     ring.position.copy(newPos);
     ring.mesh.position.copy(newPos);
@@ -797,6 +811,7 @@
 
   function checkStageTransition() {
     const stageName = document.getElementById('hud-stage-name');
+    const prevStage = gameStage;
     
     if (currentRingIndex < 5) {
       gameStage = 1;
@@ -818,8 +833,12 @@
       if (gameStage !== 4) {
         gameStage = 4;
         showWarningBanner("BOSS BATTLE: CYBER DRAGON AWOKEN!");
-        if (stageName) stageName.innerText = "FINAL STAGE: DRAGON DEFEATED";
+        if (stageName) stageName.innerText = "FINAL STAGE: DRAGON BOSS";
       }
+    }
+    // Refresh ring visibility on any stage change
+    if (gameStage !== prevStage) {
+      updateRingsVisibility();
     }
   }
 
@@ -914,111 +933,130 @@
     meteors.push(mesh);
   }
 
-  function spawnPirateShip() {
-    if (pirateShip) scene.remove(pirateShip);
-    
-    pirateShip = new THREE.Group();
-    // Dark red mecha hull
-    const hullGeo = new THREE.ConeGeometry(3, 9, 4);
+  // Build a single 3x-scale pirate ship group and return it
+  function buildPirateShipGroup() {
+    const group = new THREE.Group();
+    // Dark red mecha hull (3x scale: cone radius 9, height 27)
+    const hullGeo = new THREE.ConeGeometry(9, 27, 4);
     hullGeo.rotateX(Math.PI / 2);
     const hullMat = new THREE.MeshStandardMaterial({ color: 0x5a1818, metalness: 0.9, roughness: 0.2 });
     const body = new THREE.Mesh(hullGeo, hullMat);
-    pirateShip.add(body);
-    
-    // Laser pointer line
-    const laserPointerGeo = new THREE.CylinderGeometry(0.02, 0.02, 80, 4);
+    group.add(body);
+
+    // Laser targeting pointer (3x scale)
+    const laserPointerGeo = new THREE.CylinderGeometry(0.06, 0.06, 240, 4);
     laserPointerGeo.rotateX(Math.PI / 2);
-    laserPointerGeo.translate(0, 0, -40); // pivot
-    const laserPointerMat = new THREE.MeshBasicMaterial({ color: 0xff0000, transparent: true, opacity: 0.15 });
+    laserPointerGeo.translate(0, 0, -120);
+    const laserPointerMat = new THREE.MeshBasicMaterial({ color: 0xff0000, transparent: true, opacity: 0.18 });
     const pointer = new THREE.Mesh(laserPointerGeo, laserPointerMat);
     pointer.name = "pointer";
-    pirateShip.add(pointer);
+    group.add(pointer);
 
-    // Thrusters
-    const engineGeo = new THREE.CylinderGeometry(0.8, 0.8, 2, 8);
+    // Thrusters (3x scale)
+    const engineGeo = new THREE.CylinderGeometry(2.4, 2.4, 6, 8);
     engineGeo.rotateX(Math.PI / 2);
     const engineMat = new THREE.MeshStandardMaterial({ color: 0xff0033, emissive: 0xff0033, emissiveIntensity: 1.5 });
     const engLeft = new THREE.Mesh(engineGeo, engineMat);
-    engLeft.position.set(-2, 0, 4.5);
+    engLeft.position.set(-6, 0, 13.5);
     const engRight = engLeft.clone();
-    engRight.position.x = 2;
-    pirateShip.add(engLeft);
-    pirateShip.add(engRight);
+    engRight.position.x = 6;
+    group.add(engLeft);
+    group.add(engRight);
 
-    scene.add(pirateShip);
-    pirateShip.position.set(0, 25, -230);
-    pirateFireTimer = 0;
+    return group;
+  }
+
+  function spawnPirateFleet() {
+    // Remove any previous ships
+    pirateShips.forEach(ps => scene.remove(ps.group));
+    pirateShips = [];
+
+    const activeRing = rings[currentRingIndex];
+    const basePos = activeRing ? activeRing.position.clone() : new THREE.Vector3(0, 22, -420);
+
+    // Offsets so ships spread around the ring
+    const offsets = [
+      new THREE.Vector3( 80, 30, -60),
+      new THREE.Vector3(-80, 20, -60),
+      new THREE.Vector3( 40, 50,  60),
+      new THREE.Vector3(-40, 10,  60)
+    ];
+
+    offsets.forEach((offset, idx) => {
+      const group = buildPirateShipGroup();
+      group.position.copy(basePos).add(offset);
+      scene.add(group);
+      pirateShips.push({
+        group: group,
+        fireTimer: idx * 0.5,           // stagger initial shots
+        lockOnTarget: new THREE.Vector3(),
+        orbitOffset: offset.clone(),
+        orbitPhase: idx * (Math.PI / 2)  // quarter-turn apart
+      });
+    });
   }
 
   function updatePirateShip(deltaTime) {
     if (gameStage !== 2) {
-      if (pirateShip) {
-        scene.remove(pirateShip);
-        pirateShip = null;
-      }
+      pirateShips.forEach(ps => scene.remove(ps.group));
+      pirateShips = [];
       pirateLasers.forEach(l => scene.remove(l));
       pirateLasers = [];
       return;
     }
 
-    if (!pirateShip) {
-      spawnPirateShip();
+    if (pirateShips.length === 0) {
+      spawnPirateFleet();
     }
 
-    // Stationed hovering near active ring
     const time = clock.getElapsedTime();
     const activeRing = rings[currentRingIndex];
-    if (activeRing) {
-      const targetPos = activeRing.position.clone().add(new THREE.Vector3(
-        Math.sin(time * 0.8) * 20,
-        15 + Math.cos(time * 0.5) * 5,
-        -40
-      ));
-      pirateShip.position.lerp(targetPos, 1.2 * deltaTime);
-    }
 
-    pirateShip.lookAt(player.position);
-
-    // Laser fire cycle
-    pirateFireTimer += deltaTime;
-    const pointer = pirateShip.getObjectByName("pointer");
-    
-    // Scale tracking pointer
-    if (pointer) {
-      if (pirateFireTimer < 1.3) {
-        pointer.visible = true;
-        // Lock indicator targeting player
-        pirateLockOnTarget.copy(player.position);
-      } else {
-        pointer.visible = false;
+    pirateShips.forEach((ps, idx) => {
+      // Patrol orbit around the active ring
+      if (activeRing) {
+        const angle = time * 0.5 + ps.orbitPhase;
+        const targetPos = activeRing.position.clone().add(new THREE.Vector3(
+          Math.cos(angle) * 90,
+          20 + Math.sin(time * 0.4 + idx) * 15,
+          Math.sin(angle) * 90
+        ));
+        ps.group.position.lerp(targetPos, 1.0 * deltaTime);
       }
-    }
+      ps.group.lookAt(player.position);
 
-    if (pirateFireTimer >= 2.0) {
-      pirateFireTimer = 0;
+      // Each ship has its own fire timer
+      ps.fireTimer += deltaTime;
+      const pointer = ps.group.getObjectByName("pointer");
 
-      // Fire actual red laser
-      const laserGeo = new THREE.CylinderGeometry(0.18, 0.18, 6, 8);
-      laserGeo.rotateX(Math.PI / 2);
-      const laserMat = new THREE.MeshBasicMaterial({ color: 0xff3b30 });
-      const laser = new THREE.Mesh(laserGeo, laserMat);
-      
-      laser.position.copy(pirateShip.position);
-      
-      const dir = new THREE.Vector3().subVectors(pirateLockOnTarget, pirateShip.position).normalize();
-      laser.lookAt(pirateLockOnTarget);
-      laser.userData = {
-        direction: dir,
-        speed: 75.0,
-        life: 3.2
-      };
+      if (pointer) {
+        if (ps.fireTimer < 1.3) {
+          pointer.visible = true;
+          ps.lockOnTarget.copy(player.position);
+        } else {
+          pointer.visible = false;
+        }
+      }
 
-      scene.add(laser);
-      pirateLasers.push(laser);
-      showWarningBanner("ALERT: PIRATE LASER FIRED!");
-    }
+      if (ps.fireTimer >= 2.5) {
+        ps.fireTimer = 0;
 
-    // Update lasers
+        // Fire laser bolt
+        const laserGeo = new THREE.CylinderGeometry(0.5, 0.5, 18, 8);
+        laserGeo.rotateX(Math.PI / 2);
+        const laserMat = new THREE.MeshBasicMaterial({ color: 0xff3b30 });
+        const laser = new THREE.Mesh(laserGeo, laserMat);
+        laser.position.copy(ps.group.position);
+        const dir = new THREE.Vector3().subVectors(ps.lockOnTarget, ps.group.position).normalize();
+        laser.lookAt(ps.lockOnTarget);
+        laser.userData = { direction: dir, speed: 80.0, life: 4.0 };
+        scene.add(laser);
+        pirateLasers.push(laser);
+        showWarningBanner("ALERT: PIRATE LASER FIRED!");
+      }
+    });
+
+    // Update all laser bolts
     for (let i = pirateLasers.length - 1; i >= 0; i--) {
       const l = pirateLasers[i];
       l.position.addScaledVector(l.userData.direction, l.userData.speed * deltaTime);
@@ -1032,9 +1070,9 @@
         continue;
       }
 
-      // Collision check
+      // Collision check (larger hit radius for 3x ships)
       const dist = l.position.distanceTo(player.position);
-      if (dist < 2.0) {
+      if (dist < 6.0) {
         takeDamage(5);
         spawnExplosion(l.position, 0xff3b30, 10, 0.3);
         scene.remove(l);
@@ -1050,31 +1088,34 @@
 
     dragon = new THREE.Group();
 
-    // Dragon head mesh built from cones/boxes
-    const headGeo = new THREE.ConeGeometry(3.5, 8, 4);
+    // 20x scaled Dragon head
+    const headGeo = new THREE.ConeGeometry(70, 160, 4);
     headGeo.rotateX(Math.PI / 2);
     const headMat = new THREE.MeshStandardMaterial({ color: 0x081c15, metalness: 0.9, roughness: 0.25 });
     const headMesh = new THREE.Mesh(headGeo, headMat);
     dragon.add(headMesh);
 
-    // Glowing green eyes
-    const eyeGeo = new THREE.SphereGeometry(0.5, 8, 8);
+    // Glowing green eyes (20x)
+    const eyeGeo = new THREE.SphereGeometry(10, 8, 8);
     const eyeMat = new THREE.MeshStandardMaterial({ color: 0x00ff66, emissive: 0x00ff66, emissiveIntensity: 2.0 });
     const eyeL = new THREE.Mesh(eyeGeo, eyeMat);
-    eyeL.position.set(-1.6, 1.0, -2.5);
+    eyeL.position.set(-32, 20, -50);
     const eyeR = eyeL.clone();
-    eyeR.position.x = 1.6;
+    eyeR.position.x = 32;
     dragon.add(eyeL);
     dragon.add(eyeR);
 
+    // Position near stage-4 first ring
+    const stage4Ring = rings[15];
+    const baseZ = stage4Ring ? stage4Ring.position.z - 200 : -1200;
     scene.add(dragon);
-    dragon.position.set(0, 32, 140);
+    dragon.position.set(0, 30, baseZ);
 
-    // Body segments (10 segments follows head)
+    // Body segments (10 segments, 20x scale)
     dragonSegments = [];
     let prevPos = dragon.position.clone();
     for (let i = 0; i < 10; i++) {
-      const segGeo = new THREE.SphereGeometry(3.0 - i * 0.22, 8, 8);
+      const segGeo = new THREE.SphereGeometry((60 - i * 4.4), 8, 8);
       const segMat = new THREE.MeshStandardMaterial({
         color: 0x05130e,
         metalness: 0.9,
@@ -1083,10 +1124,11 @@
         emissiveIntensity: 0.45 - (i * 0.045)
       });
       const segment = new THREE.Mesh(segGeo, segMat);
-      segment.position.copy(prevPos).z += 4.0;
+      segment.position.copy(prevPos);
+      segment.position.z += 80.0;
       scene.add(segment);
       dragonSegments.push(segment);
-      prevPos = segment.position;
+      prevPos = segment.position.clone();
     }
 
     dragonAttackTimer = 0;
@@ -1102,21 +1144,24 @@
       spawnDragon();
     }
 
-    // Slithering central orbit pattern (X, Y, Z sine waves)
+    // Slithering central orbit pattern around stage-4 ring zone
     const time = clock.getElapsedTime();
-    const targetX = Math.sin(time * 0.65) * 32;
-    const targetY = 26 + Math.cos(time * 0.45) * 12;
-    const targetZ = 130 + Math.sin(time * 0.22) * 16;
+    const stage4Ring = rings[15];
+    const orbitZ = stage4Ring ? stage4Ring.position.z - 200 : -1200;
+    const targetX = Math.sin(time * 0.65) * 300;
+    const targetY = 30 + Math.cos(time * 0.45) * 80;
+    const targetZ = orbitZ + Math.sin(time * 0.22) * 100;
 
-    dragon.position.lerp(new THREE.Vector3(targetX, targetY, targetZ), 1.2 * deltaTime);
+    dragon.position.lerp(new THREE.Vector3(targetX, targetY, targetZ), 1.0 * deltaTime);
     dragon.lookAt(player.position);
 
-    // Body segments follow lag
+    // Body segments follow lag with 20x spacing
     let lead = dragon;
     for (let i = 0; i < dragonSegments.length; i++) {
       const seg = dragonSegments[i];
       const dir = new THREE.Vector3().subVectors(seg.position, lead.position).normalize();
-      const targetPos = lead.position.clone().addScaledVector(dir, 3.8 - i * 0.08);
+      const segSpacing = (76 - i * 1.6); // 20x of original 3.8-0.08i
+      const targetPos = lead.position.clone().addScaledVector(dir, segSpacing);
       seg.position.lerp(targetPos, 8.0 * deltaTime);
       seg.lookAt(lead.position);
       lead = seg;
@@ -1138,33 +1183,30 @@
       triggerDragonAttack(roll);
     }
 
-    // 1) Update homing fireballs
-    for (let i = dragonFireballs.length - 1; i >= 0; i--) {
-      const f = dragonFireballs[i];
-      
-      // Homing tracking logic
-      const targetDir = new THREE.Vector3().subVectors(player.position, f.position).normalize();
-      f.userData.direction.lerp(targetDir, 2.5 * deltaTime).normalize();
+    // 1) Update active dragon laser beam
+    if (activeDragonLaser) {
+      activeDragonLaser.timer -= deltaTime;
+      // Keep laser origin/direction synced to dragon head
+      const mouthOffset = new THREE.Vector3(0, 0, -80).applyQuaternion(dragon.quaternion);
+      activeDragonLaser.mesh.position.copy(dragon.position).add(mouthOffset);
+      activeDragonLaser.mesh.quaternion.copy(dragon.quaternion);
 
-      f.position.addScaledVector(f.userData.direction, f.userData.speed * deltaTime);
-      f.userData.life -= deltaTime;
-
-      const dist = f.position.distanceTo(player.position);
-      if (dist < 2.2) {
-        takeDamage(5);
-        spawnExplosion(f.position, 0xff00ff, 15, 0.4);
-        scene.remove(f);
-        f.geometry.dispose();
-        f.material.dispose();
-        dragonFireballs.splice(i, 1);
-        continue;
+      // Damage player if inside the laser cylinder
+      const toPlayer = new THREE.Vector3().subVectors(player.position, dragon.position);
+      const laserDir = new THREE.Vector3(0, 0, -1).applyQuaternion(dragon.quaternion);
+      const projLen = toPlayer.dot(laserDir);
+      if (projLen > 0 && projLen < 500) {
+        const perp = toPlayer.clone().addScaledVector(laserDir, -projLen);
+        if (perp.length() < 12.0) {
+          takeDamage(3);
+        }
       }
 
-      if (f.userData.life <= 0) {
-        scene.remove(f);
-        f.geometry.dispose();
-        f.material.dispose();
-        dragonFireballs.splice(i, 1);
+      if (activeDragonLaser.timer <= 0) {
+        scene.remove(activeDragonLaser.mesh);
+        activeDragonLaser.mesh.geometry.dispose();
+        activeDragonLaser.mesh.material.dispose();
+        activeDragonLaser = null;
       }
     }
 
@@ -1221,23 +1263,28 @@
 
   function triggerDragonAttack(patternId) {
     if (patternId === 1) {
-      // Homing Dragon Breath
-      const ballGeo = new THREE.SphereGeometry(1.5, 12, 12);
-      const ballMat = new THREE.MeshBasicMaterial({ color: 0xff00ff });
-      const fireball = new THREE.Mesh(ballGeo, ballMat);
+      // STRAIGHT LASER BEAM BREATH — cylinder shot from dragon head
+      if (activeDragonLaser) return; // only one beam at a time
 
-      fireball.position.copy(dragon.position).add(new THREE.Vector3(0, 0, -3).applyQuaternion(dragon.quaternion));
-      const dir = new THREE.Vector3().subVectors(player.position, fireball.position).normalize();
-      
-      fireball.userData = {
-        direction: dir,
-        speed: 18.0,
-        life: 5.0
-      };
+      const beamGeo = new THREE.CylinderGeometry(8.0, 8.0, 500, 16);
+      beamGeo.rotateX(Math.PI / 2);
+      beamGeo.translate(0, 0, -250); // extend forward from pivot
+      const beamMat = new THREE.MeshBasicMaterial({
+        color: 0xff00ff,
+        transparent: true,
+        opacity: 0.85
+      });
+      const beamMesh = new THREE.Mesh(beamGeo, beamMat);
 
-      scene.add(fireball);
-      dragonFireballs.push(fireball);
-      showWarningBanner("BOSS ATTACK: HOMING BREATH!");
+      // Position at dragon mouth
+      const mouthOffset = new THREE.Vector3(0, 0, -80).applyQuaternion(dragon.quaternion);
+      beamMesh.position.copy(dragon.position).add(mouthOffset);
+      beamMesh.quaternion.copy(dragon.quaternion);
+
+      scene.add(beamMesh);
+      activeDragonLaser = { mesh: beamMesh, timer: 2.5 };
+      showWarningBanner("BOSS ATTACK: DRAGON LASER BREATH!");
+      spawnExplosion(beamMesh.position, 0xff00ff, 20, 1.5);
       
     } else if (patternId === 2) {
       // Orbital warning bombardment
@@ -1314,6 +1361,14 @@
     dragonSegments = [];
     dragonFireballs.forEach(f => scene.remove(f));
     dragonFireballs = [];
+
+    // Remove active laser beam
+    if (activeDragonLaser) {
+      scene.remove(activeDragonLaser.mesh);
+      activeDragonLaser.mesh.geometry.dispose();
+      activeDragonLaser.mesh.material.dispose();
+      activeDragonLaser = null;
+    }
     
     if (bombardmentActive) {
       scene.remove(bombardmentActive.mesh);
@@ -1407,14 +1462,9 @@
     const hoverForce = hoverStiffness * (targetHoverHeight - hoverHeight) - hoverDamping * hoverVelocity;
     hoverVelocity += hoverForce * deltaTime;
     
-    hoverVelocity = THREE.MathUtils.clamp(hoverVelocity, -7.0, 7.0);
+    hoverVelocity = THREE.MathUtils.clamp(hoverVelocity, -12.0, 12.0);
     hoverHeight += hoverVelocity * deltaTime;
-    
-    if (hoverHeight < 0.1) {
-      hoverHeight = 0.1;
-      hoverVelocity = 0;
-      if (targetHoverHeight < 0.1) targetHoverHeight = 0.1;
-    }
+    // No floor clamp — free descent in space
 
     // 2. Forward/reverse speed (gradual velocity build-up & slow down)
     let targetSpeed = 0;
@@ -1491,13 +1541,9 @@
 
     // 4. Update Position
     const direction = new THREE.Vector3(0, 0, -1).applyQuaternion(player.quaternion);
-    
-    // Only allow forward/backward movement if ship is hovering off the ground
-    const flightAllowed = hoverHeight > 0.2;
-    const speedMultiplier = flightAllowed ? 1.0 : 0.0;
-    
-    // Move ship
-    player.position.addScaledVector(direction, currentSpeed * speedMultiplier * deltaTime);
+
+    // Free space flight — no ground constraints
+    player.position.addScaledVector(direction, currentSpeed * deltaTime);
 
     // Adjust targetHoverHeight dynamically to follow active flight climbing/diving when manually pitching
     const isMoving = isMovingForward || isMovingBackward || isBoosting;
@@ -1506,17 +1552,12 @@
       targetHoverHeight = player.position.y;
     }
 
-    // Apply altitude constraints
+    // Apply altitude tracking (spacebar lifts, no floor clamp)
     if (player.position.y > hoverHeight) {
       const pullDownSpeed = keys[' '] ? 1.2 : 4.5;
       player.position.y = THREE.MathUtils.lerp(player.position.y, hoverHeight, pullDownSpeed * deltaTime);
     } else {
       player.position.y = THREE.MathUtils.lerp(player.position.y, hoverHeight, 8.0 * deltaTime);
-    }
-
-    if (player.position.y < 0.1) {
-      player.position.y = 0.1;
-      if (targetHoverHeight < 0.1) targetHoverHeight = 0.1;
     }
 
     // Auto-center camera back behind the ship if the user isn't dragging
@@ -1581,10 +1622,9 @@
       meteors.forEach(m => scene.remove(m));
       meteors = [];
       
-      if (pirateShip) {
-        scene.remove(pirateShip);
-        pirateShip = null;
-      }
+      // Clear pirate fleet
+      pirateShips.forEach(ps => scene.remove(ps.group));
+      pirateShips = [];
       pirateLasers.forEach(l => scene.remove(l));
       pirateLasers = [];
       
