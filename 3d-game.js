@@ -75,7 +75,8 @@
     scene.fog = new THREE.FogExp2(0x040406, 0.015);
 
     camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-    camera.position.set(0, 5, 10);
+    // Position camera closer to replicate standard game 3rd person spring arm
+    camera.position.set(0, 2.5, 4.5);
 
     renderer = new THREE.WebGLRenderer({ canvas: gameCanvas, antialias: true, alpha: false });
     renderer.setSize(window.innerWidth, window.innerHeight);
@@ -89,9 +90,9 @@
     controls = new THREE.OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
-    controls.maxPolarAngle = Math.PI / 2 - 0.05; // Don't go below ground
-    controls.minDistance = 3.0;
-    controls.maxDistance = 15;
+    controls.maxPolarAngle = Math.PI / 2 - 0.08; // Don't go below ground
+    controls.minDistance = 2.0; // Allow close follow
+    controls.maxDistance = 8.0; // Limit zoom out to keep player size large
     controls.enablePan = false; // Disable panning to replicate Unreal spring arm look
 
     // Ambient light (Dark purple / Cyberpunk vibe)
@@ -207,26 +208,26 @@
         if (child.isBone) {
           const name = child.name.toLowerCase();
           
-          // Thigh/leg bone mapping
-          if (name.includes('upperleg') || name.includes('thigh') || name.includes('upleg') || name.includes('leg_l') || name.includes('leg_r')) {
-            if (name.includes('left') || name.includes('_l_') || name.endsWith('_l') || name.includes('l_upperleg') || name.includes('l_thigh')) {
+          // Thigh/leg bone mapping (checking suffix to avoid J_Bip_L_ prefix conflict)
+          if (name.includes('upperleg') || name.includes('thigh') || name.includes('upleg')) {
+            if (name.endsWith('_l') || name.endsWith('left') || name.includes('_l_upperleg')) {
               bones.leftLeg = child;
-            } else if (name.includes('right') || name.includes('_r_') || name.endsWith('_r') || name.includes('r_upperleg') || name.includes('r_thigh')) {
+            } else if (name.endsWith('_r') || name.endsWith('right') || name.includes('_r_upperleg')) {
               bones.rightLeg = child;
             }
           }
           
-          // Upper arm bone mapping
+          // Upper arm bone mapping (checking suffix to avoid J_Bip_L_ prefix conflict)
           if (name.includes('upperarm') || name.includes('arm') || name.includes('shoulder')) {
-            if (name.includes('left') || name.includes('_l_') || name.endsWith('_l') || name.includes('l_upperarm')) {
+            if (name.endsWith('_l') || name.endsWith('left') || name.includes('_l_upperarm')) {
               bones.leftArm = child;
-            } else if (name.includes('right') || name.includes('_r_') || name.endsWith('_r') || name.includes('r_upperarm')) {
+            } else if (name.endsWith('_r') || name.endsWith('right') || name.includes('_r_upperarm')) {
               bones.rightArm = child;
             }
           }
         }
       });
-      console.log("Procedural bones found:", bones);
+      console.log("Procedural bones mapped:", bones);
     }
 
     function loadLocalTextures(root) {
@@ -305,6 +306,13 @@
       loadLocalTextures(player);
 
       scene.add(player);
+
+      // Force camera position close behind the player initially
+      if (controls) {
+        camera.position.set(0, 2.5, 4.5);
+        controls.target.set(0, 1.2, 0);
+        controls.update();
+      }
 
       // Check animations
       if (player.animations && player.animations.length > 0) {
