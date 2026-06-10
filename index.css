@@ -1297,3 +1297,274 @@ footer {
   }
 }
 
+/* ==========================================================================
+   3D GameMode Styles (Neon Cyberpunk Theme)
+   ========================================================================== */
+.gamemode-section {
+  padding: 40px 20px;
+  background: var(--bg-dark);
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.gamemode-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(18, 18, 18, 0.7);
+  border: 1px solid var(--color-primary);
+  color: var(--color-primary);
+  padding: 16px 40px;
+  font-family: var(--font-title);
+  font-size: 1.1rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+  box-shadow: 0 0 15px rgba(255, 204, 0, 0.05);
+  position: relative;
+  overflow: hidden;
+}
+
+.game-btn-icon {
+  width: 22px;
+  height: 22px;
+  transition: transform 0.4s ease;
+}
+
+.gamemode-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 204, 0, 0.15), transparent);
+  transition: all 0.6s ease;
+}
+
+.gamemode-btn:hover {
+  background: var(--color-primary);
+  color: var(--color-text-dark);
+  box-shadow: 0 0 30px var(--color-primary-glow), inset 0 0 10px rgba(255, 255, 255, 0.2);
+  transform: translateY(-4px);
+}
+
+.gamemode-btn:hover::before {
+  left: 100%;
+}
+
+.gamemode-btn:hover .game-btn-icon {
+  transform: rotate(-10deg) scale(1.15);
+}
+
+/* 3D Game Canvas Fullscreen Overlay Container */
+.game-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 1500;
+  background: #040406;
+  overflow: hidden;
+  transition: opacity 0.5s ease, visibility 0.5s ease;
+  opacity: 1;
+  visibility: visible;
+}
+
+.game-container.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+#game-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Glassmorphic Game HUD overlay */
+.game-hud {
+  position: absolute;
+  bottom: 30px;
+  left: 30px;
+  background: rgba(10, 10, 15, 0.7);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 25px 30px;
+  border-radius: 12px;
+  color: var(--color-text-white);
+  z-index: 1510;
+  max-width: 420px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5), inset 0 0 15px rgba(255, 255, 255, 0.02);
+  pointer-events: none;
+}
+
+.hud-header {
+  margin-bottom: 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 10px;
+}
+
+.hud-title {
+  font-family: var(--font-title);
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  color: var(--color-primary);
+  text-shadow: 0 0 10px var(--color-primary-glow);
+}
+
+.hud-status {
+  font-size: 0.75rem;
+  color: var(--color-text-gray);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-top: 3px;
+  display: block;
+}
+
+.hud-controls-guide {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.guide-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: var(--color-text-gray);
+  font-weight: 500;
+}
+
+.guide-item span:last-child {
+  margin-left: 5px;
+  color: #dddddd;
+}
+
+.kbd {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-bottom: 3px solid rgba(255, 255, 255, 0.25);
+  border-radius: 4px;
+  padding: 3px 8px;
+  font-family: var(--font-title);
+  font-weight: 600;
+  font-size: 0.75rem;
+  color: var(--color-primary);
+  box-shadow: 0 2px 0 rgba(0,0,0,0.5);
+  display: inline-block;
+  min-width: 24px;
+  text-align: center;
+}
+
+/* Loading Overlay Styles */
+.game-loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #040406;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1520;
+  transition: opacity 0.5s ease;
+}
+
+.game-loading-overlay.fade-out {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.loading-spinner-wrapper {
+  text-align: center;
+}
+
+.loading-spinner {
+  width: 60px;
+  height: 60px;
+  border: 3px solid rgba(255, 204, 0, 0.1);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: spin 1s infinite linear;
+  margin: 0 auto 20px;
+  box-shadow: 0 0 15px rgba(255, 204, 0, 0.05);
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.loading-text {
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 1px;
+  color: var(--color-text-gray);
+}
+
+/* Game exit floating button */
+.close-game-btn {
+  position: absolute;
+  top: 30px;
+  right: 30px;
+  background: rgba(10, 10, 15, 0.7);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--color-text-white);
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 1535;
+  transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+}
+
+.close-game-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+.close-game-btn:hover {
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+  transform: rotate(90deg) scale(1.1);
+  background: rgba(255, 204, 0, 0.15);
+  box-shadow: 0 0 20px var(--color-primary-glow);
+}
+
+/* Responsive adjustment for Game HUD */
+@media (max-width: 576px) {
+  .game-hud {
+    bottom: 20px;
+    left: 20px;
+    right: 20px;
+    max-width: none;
+    padding: 15px 20px;
+  }
+  .close-game-btn {
+    top: 20px;
+    right: 20px;
+    width: 44px;
+    height: 44px;
+  }
+}
+
+

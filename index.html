@@ -18,6 +18,12 @@
   <meta property="og:description" content="카메라의 렌즈를 통해 담아내는 특별한 이야기. Eol의 영상 포트폴리오 사이트입니다.">
   <meta property="og:image" content="assets/웹페이지 테스트4.png">
   
+  <!-- Three.js 3D Game Dependencies -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/fflate@0.8.2/lib/browser.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/mrdoob/three.js@r128/examples/js/loaders/FBXLoader.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/mrdoob/three.js@r128/examples/js/controls/OrbitControls.js"></script>
+
   <!-- Stylesheets -->
   <link rel="stylesheet" href="index.css">
 </head>
@@ -444,6 +450,20 @@
   </div>
 
   <!-- ==========================================================================
+       4.5 3D GAMEMODE ENTRY POINT
+       ========================================================================== -->
+  <section class="gamemode-section">
+    <div class="gamemode-container">
+      <button id="open-game-btn" class="gamemode-btn" aria-label="3D 가상 공간 게임모드 시작">
+        <svg viewBox="0 0 24 24" class="game-btn-icon">
+          <path d="M21 6H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-10 7H8v3H6v-3H3v-2h3V8h2v3h3v2zm4.5 3c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm3-3c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z" fill="currentColor"/>
+        </svg>
+        <span>3D GameMode</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- ==========================================================================
        5. FOOTER
        ========================================================================== -->
   <footer>
@@ -464,7 +484,46 @@
     </div>
   </footer>
 
+  <!-- ==========================================================================
+       4.7 3D GAMEMODE VIEWPORT OVERLAY
+       ========================================================================== -->
+  <div id="game-container" class="game-container hidden">
+    <!-- 3D Canvas -->
+    <canvas id="game-canvas"></canvas>
+
+    <!-- Glassmorphic HUD overlay -->
+    <div class="game-hud">
+      <div class="hud-header">
+        <h2 class="hud-title">3D CYBERPUNK WORLD</h2>
+        <span class="hud-status">PLAYER: MIR (FBX)</span>
+      </div>
+      
+      <div class="hud-controls-guide">
+        <div class="guide-item"><span class="kbd">W</span><span class="kbd">A</span><span class="kbd">S</span><span class="kbd">D</span><span>Move & Rotate</span></div>
+        <div class="guide-item"><span class="kbd">Space</span><span>Jump</span></div>
+        <div class="guide-item"><span class="kbd">Shift</span><span>Run</span></div>
+        <div class="guide-item"><span class="kbd">Mouse Drag</span><span>Orbit View</span></div>
+      </div>
+    </div>
+
+    <!-- Loading spinner -->
+    <div id="game-loading-overlay" class="game-loading-overlay">
+      <div class="loading-spinner-wrapper">
+        <div class="loading-spinner"></div>
+        <div id="game-loading-text" class="loading-text">Mir_Fix.fbx 로딩 중... (0%)</div>
+      </div>
+    </div>
+
+    <!-- Exit Button -->
+    <button id="close-game-btn" class="close-game-btn" title="게임 종료 (ESC)">
+      <svg viewBox="0 0 24 24">
+        <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" fill="currentColor"/>
+      </svg>
+    </button>
+  </div>
+
   <!-- Scripts -->
   <script src="index.js"></script>
+  <script src="3d-game.js"></script>
 </body>
 </html>
