@@ -140,11 +140,64 @@
 
     // Show loading
     loadingOverlay.classList.remove('fade-out');
-    loadingText.innerText = "Mir_Fix.fbx 로딩 중... (0%)";
+    loadingText.innerText = "캐릭터 데이터 분석 중...";
 
-    // Load character fbx
-    const loader = new THREE.FBXLoader();
-    loader.load('assets/Mir_Fix.fbx', (fbx) => {
+    // Attempt to load character from Base64 data (CORS-free for local file:/// executions)
+    if (window.MIR_FBX_BASE64) {
+      try {
+        console.log("Loading character from embedded Base64 data...");
+        const binaryString = atob(window.MIR_FBX_BASE64);
+        const len = binaryString.length;
+        const bytes = new Uint8Array(len);
+        for (let i = 0; i < len; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+        const arrayBuffer = bytes.buffer;
+
+        const loader = new THREE.FBXLoader();
+        const fbx = loader.parse(arrayBuffer, 'assets/');
+        
+        setupPlayer(fbx);
+        loadingOverlay.classList.add('fade-out');
+        bindInput();
+        animate();
+      } catch (e) {
+        console.error("Failed to parse embedded Base64 FBX, falling back to HTTP load:", e);
+        loadCharacterViaHttp();
+      }
+    } else {
+      console.log("No embedded Base64 data found. Falling back to HTTP load...");
+      loadCharacterViaHttp();
+    }
+
+    function loadCharacterViaHttp() {
+      loadingText.innerText = "Mir_Fix.fbx 로딩 중... (0%)";
+      const loader = new THREE.FBXLoader();
+      loader.load('assets/Mir_Fix.fbx', (fbx) => {
+        setupPlayer(fbx);
+        loadingOverlay.classList.add('fade-out');
+        bindInput();
+        animate();
+      }, (xhr) => {
+        if (xhr.total > 0) {
+          const percent = Math.round((xhr.loaded / xhr.total) * 100);
+          loadingText.innerText = `Mir_Fix.fbx 로딩 중... (${percent}%)`;
+        } else {
+          const kb = Math.round(xhr.loaded / 1024);
+          loadingText.innerText = `Mir_Fix.fbx 로드 중... (${kb} KB)`;
+        }
+      }, (error) => {
+        console.error("FBX HTTP loading error:", error);
+        loadingText.innerText = "로딩 실패. 기본 캐릭터로 대체합니다.";
+        
+        createFallbackPlayer();
+        loadingOverlay.classList.add('fade-out');
+        bindInput();
+        animate();
+      });
+    }
+
+    function setupPlayer(fbx) {
       player = fbx;
       
       // Auto-scale character to a realistic height
@@ -207,31 +260,7 @@
           currentAction.play();
         }
       }
-
-      // Hide loading overlay
-      loadingOverlay.classList.add('fade-out');
-
-      // Setup inputs and animation frame
-      bindInput();
-      animate();
-
-    }, (xhr) => {
-      if (xhr.total > 0) {
-        const percent = Math.round((xhr.loaded / xhr.total) * 100);
-        loadingText.innerText = `Mir_Fix.fbx 로딩 중... (${percent}%)`;
-      } else {
-        const kb = Math.round(xhr.loaded / 1024);
-        loadingText.innerText = `Mir_Fix.fbx 로드 중... (${kb} KB)`;
-      }
-    }, (error) => {
-      console.error("FBX loading error:", error);
-      loadingText.innerText = "로딩 실패. 기본 캐릭터로 대체합니다.";
-      
-      createFallbackPlayer();
-      loadingOverlay.classList.add('fade-out');
-      bindInput();
-      animate();
-    });
+    }
 
     window.addEventListener('resize', onWindowResize);
   }

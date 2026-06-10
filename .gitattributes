@@ -1,3 +1,4 @@
 assets/*.mp4 filter=lfs diff=lfs merge=lfs -text
 assets/*.mov filter=lfs diff=lfs merge=lfs -text
 assets/*.fbx filter=lfs diff=lfs merge=lfs -text
+assets/mir_fbx_base64.js filter=lfs diff=lfs merge=lfs -text
