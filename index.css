@@ -1263,8 +1263,9 @@ footer {
   flex: 1;
   min-width: 260px;
   max-width: 31%;
-  aspect-ratio: 2 / 3;
-  object-fit: cover;
+  height: auto;
+  max-height: 520px;
+  object-fit: contain;
 }
 
 /* 단일 이미지 배치용 */
