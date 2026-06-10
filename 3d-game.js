@@ -1088,34 +1088,34 @@
 
     dragon = new THREE.Group();
 
-    // 20x scaled Dragon head
-    const headGeo = new THREE.ConeGeometry(70, 160, 4);
+    // 10x scaled Dragon head
+    const headGeo = new THREE.ConeGeometry(35, 80, 4);
     headGeo.rotateX(Math.PI / 2);
     const headMat = new THREE.MeshStandardMaterial({ color: 0x081c15, metalness: 0.9, roughness: 0.25 });
     const headMesh = new THREE.Mesh(headGeo, headMat);
     dragon.add(headMesh);
 
-    // Glowing green eyes (20x)
-    const eyeGeo = new THREE.SphereGeometry(10, 8, 8);
+    // Glowing green eyes (10x)
+    const eyeGeo = new THREE.SphereGeometry(5, 8, 8);
     const eyeMat = new THREE.MeshStandardMaterial({ color: 0x00ff66, emissive: 0x00ff66, emissiveIntensity: 2.0 });
     const eyeL = new THREE.Mesh(eyeGeo, eyeMat);
-    eyeL.position.set(-32, 20, -50);
+    eyeL.position.set(-16, 10, -25);
     const eyeR = eyeL.clone();
-    eyeR.position.x = 32;
+    eyeR.position.x = 16;
     dragon.add(eyeL);
     dragon.add(eyeR);
 
     // Position near stage-4 first ring
     const stage4Ring = rings[15];
-    const baseZ = stage4Ring ? stage4Ring.position.z - 200 : -1200;
+    const baseZ = stage4Ring ? stage4Ring.position.z - 150 : -1200;
     scene.add(dragon);
     dragon.position.set(0, 30, baseZ);
 
-    // Body segments (10 segments, 20x scale)
+    // Body segments (10 segments, 10x scale)
     dragonSegments = [];
     let prevPos = dragon.position.clone();
     for (let i = 0; i < 10; i++) {
-      const segGeo = new THREE.SphereGeometry((60 - i * 4.4), 8, 8);
+      const segGeo = new THREE.SphereGeometry((30 - i * 2.2), 8, 8);
       const segMat = new THREE.MeshStandardMaterial({
         color: 0x05130e,
         metalness: 0.9,
@@ -1125,7 +1125,7 @@
       });
       const segment = new THREE.Mesh(segGeo, segMat);
       segment.position.copy(prevPos);
-      segment.position.z += 80.0;
+      segment.position.z += 40.0;
       scene.add(segment);
       dragonSegments.push(segment);
       prevPos = segment.position.clone();
@@ -1144,23 +1144,23 @@
       spawnDragon();
     }
 
-    // Slithering central orbit pattern around stage-4 ring zone
+    // Slithering central orbit pattern around stage-4 ring zone (10x scale)
     const time = clock.getElapsedTime();
     const stage4Ring = rings[15];
-    const orbitZ = stage4Ring ? stage4Ring.position.z - 200 : -1200;
-    const targetX = Math.sin(time * 0.65) * 300;
-    const targetY = 30 + Math.cos(time * 0.45) * 80;
-    const targetZ = orbitZ + Math.sin(time * 0.22) * 100;
+    const orbitZ = stage4Ring ? stage4Ring.position.z - 150 : -1200;
+    const targetX = Math.sin(time * 0.65) * 150;
+    const targetY = 30 + Math.cos(time * 0.45) * 40;
+    const targetZ = orbitZ + Math.sin(time * 0.22) * 50;
 
     dragon.position.lerp(new THREE.Vector3(targetX, targetY, targetZ), 1.0 * deltaTime);
     dragon.lookAt(player.position);
 
-    // Body segments follow lag with 20x spacing
+    // Body segments follow lag with 10x spacing
     let lead = dragon;
     for (let i = 0; i < dragonSegments.length; i++) {
       const seg = dragonSegments[i];
       const dir = new THREE.Vector3().subVectors(seg.position, lead.position).normalize();
-      const segSpacing = (76 - i * 1.6); // 20x of original 3.8-0.08i
+      const segSpacing = (38 - i * 0.8); // 10x of original 3.8-0.08i
       const targetPos = lead.position.clone().addScaledVector(dir, segSpacing);
       seg.position.lerp(targetPos, 8.0 * deltaTime);
       seg.lookAt(lead.position);
@@ -1183,21 +1183,37 @@
       triggerDragonAttack(roll);
     }
 
-    // 1) Update active dragon laser beam
+    // 1) Update active dragon laser beam — tracks & rotates toward player each frame
     if (activeDragonLaser) {
       activeDragonLaser.timer -= deltaTime;
-      // Keep laser origin/direction synced to dragon head
-      const mouthOffset = new THREE.Vector3(0, 0, -80).applyQuaternion(dragon.quaternion);
-      activeDragonLaser.mesh.position.copy(dragon.position).add(mouthOffset);
-      activeDragonLaser.mesh.quaternion.copy(dragon.quaternion);
 
-      // Damage player if inside the laser cylinder
-      const toPlayer = new THREE.Vector3().subVectors(player.position, dragon.position);
-      const laserDir = new THREE.Vector3(0, 0, -1).applyQuaternion(dragon.quaternion);
-      const projLen = toPlayer.dot(laserDir);
+      // Smoothly rotate dragon head to keep facing player
+      // (dragon.lookAt is already called above, so quaternion is current)
+      // Compute mouth origin (10x: offset -40 from head)
+      const mouthOffset = new THREE.Vector3(0, 0, -40).applyQuaternion(dragon.quaternion);
+      const mouthPos = dragon.position.clone().add(mouthOffset);
+
+      // Direction from mouth toward player
+      const beamDir = new THREE.Vector3().subVectors(player.position, mouthPos).normalize();
+
+      // Align beam mesh: CylinderGeometry is Y-up by default after rotateX(PI/2) → now points along Z.
+      // We need to point it toward beamDir. Build a quaternion from Z→beamDir.
+      const zAxis = new THREE.Vector3(0, 0, 1);
+      const beamQuat = new THREE.Quaternion().setFromUnitVectors(zAxis, beamDir);
+
+      activeDragonLaser.mesh.position.copy(mouthPos);
+      activeDragonLaser.mesh.quaternion.copy(beamQuat);
+
+      // Pulse glow intensity for visual effect
+      const pulse = 0.6 + 0.4 * Math.sin(clock.getElapsedTime() * 30);
+      activeDragonLaser.mesh.material.opacity = pulse;
+
+      // Damage player if inside the laser cylinder (line-distance check)
+      const toPlayer = new THREE.Vector3().subVectors(player.position, mouthPos);
+      const projLen = toPlayer.dot(beamDir);
       if (projLen > 0 && projLen < 500) {
-        const perp = toPlayer.clone().addScaledVector(laserDir, -projLen);
-        if (perp.length() < 12.0) {
+        const perp = toPlayer.clone().addScaledVector(beamDir, -projLen);
+        if (perp.length() < 10.0) {
           takeDamage(3);
         }
       }
@@ -1263,12 +1279,13 @@
 
   function triggerDragonAttack(patternId) {
     if (patternId === 1) {
-      // STRAIGHT LASER BEAM BREATH — cylinder shot from dragon head
+      // TRACKING LASER BEAM BREATH — cylinder that follows player each frame
       if (activeDragonLaser) return; // only one beam at a time
 
-      const beamGeo = new THREE.CylinderGeometry(8.0, 8.0, 500, 16);
-      beamGeo.rotateX(Math.PI / 2);
-      beamGeo.translate(0, 0, -250); // extend forward from pivot
+      // Build beam geometry along +Z axis (beam origin at 0,0,0, extends 500 units forward)
+      const beamGeo = new THREE.CylinderGeometry(5.0, 5.0, 500, 16);
+      beamGeo.rotateX(Math.PI / 2); // align along Z axis
+      // Do NOT translate — pivot stays at origin so rotation tracks cleanly
       const beamMat = new THREE.MeshBasicMaterial({
         color: 0xff00ff,
         transparent: true,
@@ -1276,15 +1293,20 @@
       });
       const beamMesh = new THREE.Mesh(beamGeo, beamMat);
 
-      // Position at dragon mouth
-      const mouthOffset = new THREE.Vector3(0, 0, -80).applyQuaternion(dragon.quaternion);
+      // Initial position at dragon mouth (10x: offset -40)
+      const mouthOffset = new THREE.Vector3(0, 0, -40).applyQuaternion(dragon.quaternion);
       beamMesh.position.copy(dragon.position).add(mouthOffset);
-      beamMesh.quaternion.copy(dragon.quaternion);
+
+      // Initial direction toward player
+      const beamDir = new THREE.Vector3().subVectors(player.position, beamMesh.position).normalize();
+      const zAxis = new THREE.Vector3(0, 0, 1);
+      beamMesh.quaternion.setFromUnitVectors(zAxis, beamDir);
 
       scene.add(beamMesh);
-      activeDragonLaser = { mesh: beamMesh, timer: 2.5 };
-      showWarningBanner("BOSS ATTACK: DRAGON LASER BREATH!");
-      spawnExplosion(beamMesh.position, 0xff00ff, 20, 1.5);
+      activeDragonLaser = { mesh: beamMesh, timer: 3.0 };
+      showWarningBanner("BOSS ATTACK: DRAGON TRACKING LASER!");
+      spawnExplosion(beamMesh.position, 0xff00ff, 20, 1.0);
+
       
     } else if (patternId === 2) {
       // Orbital warning bombardment
